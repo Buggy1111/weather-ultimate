@@ -40,6 +40,10 @@ Aplikace počasí nové generace s AI predikcemi, real-time 3D vizualizacemi a p
 - **Automatická detekce polohy**
 - **Mezinárodní vyhledávání měst**
 
+## 🚀 Demo
+
+**[Live Demo →](https://your-username.github.io/weather-ultimate/)**
+
 ### Demo města
 Aplikace obsahuje přednastavené počasí pro:
 - 🇨🇿 Praha
@@ -69,7 +73,7 @@ Aplikace obsahuje přednastavené počasí pro:
 
 1. **Naklonujte repozitář**
    ```bash
-   git clone https://github.com/your-username/weather-ultimate.git
+   git clone https://github.com/Buggy1111/weather-ultimate.git
    cd weather-ultimate
    ```
 
@@ -79,7 +83,7 @@ Aplikace obsahuje přednastavené počasí pro:
 
 3. **Nastavte API klíč**
    ```javascript
-   // V ultimate.js nahraďte svým klíčem:
+   // V js/ultimate.js nahraďte svým klíčem:
    const CONFIG = {
        API_KEY: 'váš_api_klíč_zde',
        // ...
@@ -107,35 +111,47 @@ Aplikace obsahuje přednastavené počasí pro:
 
 ```
 weather-ultimate/
-├── index.html          # Hlavní HTML soubor
-├── styles.css          # Všechny styly (responzivní)
-├── ultimate.js         # Hlavní aplikační logika
-├── weather-effects.js  # 2D efekty počasí
-├── weather-3d-effects.js # 3D animace počasí
-├── weather-sounds.js   # Syntéza zvuku
-└── README.md          # Tento soubor
+├── index.html           # Hlavní HTML soubor
+├── styles.css           # Všechny styly (responzivní)
+├── manifest.json        # PWA manifest
+├── LICENSE              # MIT licence
+├── README.md            # Tento soubor
+├── favicon/             # Ikony aplikace
+│   ├── favicon.svg
+│   ├── favicon.ico
+│   ├── favicon-16x16.png
+│   ├── favicon-32x32.png
+│   ├── apple-touch-icon.png
+│   ├── android-chrome-192x192.png
+│   ├── android-chrome-512x512.png
+│   └── mstile-144x144.png
+└── js/                  # JavaScript moduly
+    ├── ultimate.js         # Hlavní aplikační logika
+    ├── weather-effects.js  # 2D efekty počasí
+    ├── weather-3d-effects.js # 3D animace počasí
+    └── weather-sounds.js   # Syntéza zvuku
 ```
 
 ### Přehled modulů
 
-- **`ultimate.js`** - Jádro aplikace
+- **`js/ultimate.js`** - Jádro aplikace
   - Správa stavu
   - Integrace API
   - UI komponenty
   - Real-time aktualizace
 
-- **`weather-effects.js`** - 2D vizuální efekty
+- **`js/weather-effects.js`** - 2D vizuální efekty
   - Dešťové kapky
   - Sněhové částice
   - Blesky
   - Vrstvy mlhy
 
-- **`weather-3d-effects.js`** - 3D scény
+- **`js/weather-3d-effects.js`** - 3D scény
   - Three.js integrace
   - 3D prostředí počasí
   - Optimalizováno pro výkon
 
-- **`weather-sounds.js`** - Zvukový engine
+- **`js/weather-sounds.js`** - Zvukový engine
   - Syntetické zvuky počasí
   - Denní/noční variace
   - Ovládání hlasitosti
@@ -179,7 +195,7 @@ weather-ultimate/
 
 ### Přidání nových efektů počasí
 ```javascript
-// V weather-effects.js
+// V js/weather-effects.js
 createCustomEffect(card, rect, effectInfo) {
     // Vaše vlastní logika efektu
 }
@@ -187,7 +203,7 @@ createCustomEffect(card, rect, effectInfo) {
 
 ### Úprava intervalu aktualizace
 ```javascript
-// V ultimate.js
+// V js/ultimate.js
 const CONFIG = {
     UPDATE_INTERVAL: 60 * 1000, // Změňte na požadované milisekundy
 };
