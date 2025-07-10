@@ -1620,3 +1620,14 @@ body {
         animation: none !important;
     }
 }
+
+/* Weather Grid */
+.weather-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 380px));
+    gap: 2rem;
+    margin-bottom: 4rem;
+    position: relative;
+    z-index: 10;
+    justify-content: center;
+}

@@ -1468,269 +1468,202 @@ function getUserLocationWeather() {
                 
                 if (window.weatherApp) {
                     try {
+                        // Zobrazit notifikaci
+                        window.weatherApp.showNotification('📍 Lokalizace', 'Získávám počasí pro vaši polohu...', 'info');
+                        
+                        // Získat data o počasí
                         const weatherService = window.weatherApp.weatherService;
-                        const data = await weatherService.fetchWeather(latitude, longitude);
-                        console.log('📍 User location weather:', data);
+                        const weatherData = await weatherService.fetchWeather(latitude, longitude);
+                        const forecastData = await weatherService.fetchForecast(latitude, longitude);
+                        
+                        // Získat název města z reverse geocoding
+                        const geoUrl = `${CONFIG.GEO_API_URL}/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${CONFIG.API_KEY}`;
+                        const geoResponse = await fetch(geoUrl);
+                        const geoData = await geoResponse.json();
+                        
+                        if (geoData && geoData.length > 0) {
+                            const location = geoData[0];
+                            const city = {
+                                name: location.local_names?.cs || location.name || 'Moje poloha',
+                                country: location.country,
+                                lat: latitude,
+                                lon: longitude
+                            };
+                            
+                            // Přidat město do aplikace
+                            const cityId = `${city.lat}-${city.lon}`;
+                            
+                            // Zkontrolovat, jestli už město není přidané
+                            if (!window.weatherApp.state.state.cities.has(cityId)) {
+                                weatherData.id = cityId;
+                                window.weatherApp.state.addCity(weatherData);
+                                
+                                // Přidat kartu do UI
+                                const weatherGrid = document.getElementById('weatherGrid');
+                                const card = UIComponents.weatherCard(city, weatherData, forecastData);
+                                
+                                // Přidat kartu na začátek s animací
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = card;
+                                const newCard = tempDiv.firstElementChild;
+                                
+                                // Přidat speciální třídu pro kartu s lokalizací
+                                newCard.classList.add('location-card');
+                                newCard.style.opacity = '0';
+                                newCard.style.transform = 'translateY(-20px) scale(0.95)';
+                                
+                                weatherGrid.insertBefore(newCard, weatherGrid.firstChild);
+                                
+                                requestAnimationFrame(() => {
+                                    newCard.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                                    newCard.style.opacity = '1';
+                                    newCard.style.transform = 'translateY(0) scale(1)';
+                                });
+                                
+                                // Přidat efekty počasí
+                                setTimeout(() => {
+                                    if (window.weatherApp.cardEffects) {
+                                        const weatherType = weatherData.weather[0].main;
+                                        window.weatherApp.cardEffects.createCardEffect(newCard, weatherType);
+                                    }
+                                }, 100);
+                                
+                                // Zobrazit úspěšnou notifikaci
+                                window.weatherApp.showNotification(
+                                    '📍 Lokalizace nalezena', 
+                                    `Zobrazuji počasí pro ${city.name}`, 
+                                    'success'
+                                );
+                                
+                                // Přidat vizuální označení pro kartu s lokalizací
+                                newCard.insertAdjacentHTML('afterbegin', `
+                                    <div class="location-badge">
+                                        <span>📍</span>
+                                        <span>Moje poloha</span>
+                                    </div>
+                                `);
+                            } else {
+                                window.weatherApp.showNotification(
+                                    'ℹ️ Info', 
+                                    'Vaše lokace už je v seznamu', 
+                                    'info'
+                                );
+                            }
+                        }
+                        
                     } catch (error) {
                         console.error('Error fetching user location weather:', error);
+                        window.weatherApp.showNotification(
+                            '❌ Chyba', 
+                            'Nepodařilo se získat počasí pro vaši polohu', 
+                            'error'
+                        );
                     }
                 }
             },
             (error) => {
                 console.log('Geolocation error:', error);
+                if (window.weatherApp) {
+                    let errorMessage = 'Nepodařilo se získat vaši polohu';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Přístup k poloze byl zamítnut';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Informace o poloze nejsou dostupné';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Vypršel časový limit pro získání polohy';
+                            break;
+                    }
+                    window.weatherApp.showNotification('📍 Lokalizace', errorMessage, 'warning');
+                }
             },
-            { enableHighAccuracy: false, timeout: 5000 }
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
         );
     }
 }
 
-setTimeout(getUserLocationWeather, 2000);
-
-// Debug mode
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('debug') === 'true') {
-    console.log('🐛 Debug mode enabled');
-    window.DEBUG = true;
-    
-    const debugPanel = document.createElement('div');
-    debugPanel.id = 'debug-panel';
-    debugPanel.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        background: rgba(0, 0, 0, 0.9);
-        color: #0f0;
-        padding: 15px;
-        border-radius: 8px;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        z-index: 9999;
-        min-width: 200px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        border: 1px solid #0f0;
-    `;
-    document.body.appendChild(debugPanel);
-    
-    let frameCount = 0;
-    let lastTime = performance.now();
-    
-    function updateDebugPanel() {
-        frameCount++;
-        const currentTime = performance.now();
-        const deltaTime = currentTime - lastTime;
+// Přidat tlačítko pro manuální získání lokace
+function addLocationButton() {
+    const searchSection = document.querySelector('.search-section');
+    if (searchSection && !document.getElementById('location-button')) {
+        const locationBtn = document.createElement('button');
+        locationBtn.id = 'location-button';
+        locationBtn.className = 'location-button';
+        locationBtn.innerHTML = '📍 Použít mou polohu';
+        locationBtn.title = 'Získat počasí pro vaši aktuální polohu';
         
-        if (deltaTime >= 1000) {
-            const fps = Math.round((frameCount * 1000) / deltaTime);
-            frameCount = 0;
-            lastTime = currentTime;
-            
-            const memory = performance.memory ? `
-                <div>JS Heap: ${(performance.memory.usedJSHeapSize / 1048576).toFixed(2)}MB</div>
-                <div>Total Heap: ${(performance.memory.totalJSHeapSize / 1048576).toFixed(2)}MB</div>
-                <div>Limit: ${(performance.memory.jsHeapSizeLimit / 1048576).toFixed(2)}MB</div>
-            ` : '';
-            
-            debugPanel.innerHTML = `
-                <div style="color: #0f0; font-weight: bold; margin-bottom: 10px;">🐛 DEBUG MODE</div>
-                <div>FPS: ${fps}</div>
-                ${memory}
-                <div>Cities: ${window.weatherApp?.state.state.cities.size || 0}</div>
-                <div>Cache Items: ${window.weatherApp?.cache.memoryCache.size || 0}</div>
-                <div>Effects: ${window.weatherApp?.cardEffects?.activeEffects.size || 0}</div>
-                <div>Network: ${navigator.connection?.effectiveType || 'N/A'}</div>
-                <div>Battery: ${navigator.getBattery ? 'Checking...' : 'N/A'}</div>
-                <div>Update Interval: ${CONFIG.UPDATE_INTERVAL / 1000}s</div>
-            `;
-            
-            if (navigator.getBattery) {
-                navigator.getBattery().then(battery => {
-                    const batteryDiv = debugPanel.querySelector('div:last-child');
-                    batteryDiv.textContent = `Battery: ${(battery.level * 100).toFixed(0)}% ${battery.charging ? '⚡' : ''}`;
-                });
-            }
-        }
+        locationBtn.addEventListener('click', () => {
+            getUserLocationWeather();
+        });
         
-        requestAnimationFrame(updateDebugPanel);
-    }
-    
-    updateDebugPanel();
-    
-    // Debug commands
-    window.debug = {
-        clearCache: () => {
-            window.weatherApp.cache.memoryCache.clear();
-            console.log('✅ Cache cleared');
-        },
-        showState: () => {
-            console.log('State:', window.weatherApp.state.state);
-        },
-        simulateError: () => {
-            throw new Error('Debug error test');
-        },
-        toggleAnimations: () => {
-            document.body.classList.toggle('reduce-animations');
-            console.log('✅ Animations toggled');
-        },
-        addRandomCity: async () => {
-            const cities = ['Berlin', 'Vienna', 'Budapest', 'Warsaw', 'Rome', 'Madrid', 'Amsterdam'];
-            const randomCity = cities[Math.floor(Math.random() * cities.length)];
-            await window.weatherApp.searchAndAddCity(randomCity);
-        },
-        exportData: () => {
-            const data = Array.from(window.weatherApp.state.state.cities.values());
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `weather-data-${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            console.log('✅ Data exported');
-        },
-        testEffects: () => {
-            const cards = document.querySelectorAll('.weather-card');
-            const weathers = ['rain', 'snow', 'thunderstorm', 'clear', 'clouds', 'mist'];
-            cards.forEach((card, i) => {
-                if (window.weatherApp.cardEffects) {
-                    const weather = weathers[i % weathers.length];
-                    window.weatherApp.cardEffects.createCardEffect(card, weather);
-                    console.log(`✅ Applied ${weather} effect to card ${i + 1}`);
+        searchSection.insertAdjacentHTML('afterbegin', `
+            <style>
+                .location-button {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border: none;
+                    color: white;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 50px;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    margin-bottom: 1rem;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
                 }
-            });
-        }
-    };
-    
-    console.log('Debug commands available:', Object.keys(window.debug));
-}
-
-// Performance monitoring
-class PerformanceMonitor {
-    static measure(name, fn) {
-        const start = performance.now();
-        const result = fn();
-        const end = performance.now();
-        console.log(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
-        return result;
-    }
-    
-    static async measureAsync(name, fn) {
-        const start = performance.now();
-        const result = await fn();
-        const end = performance.now();
-        console.log(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
-        return result;
-    }
-}
-
-// Web Animations API for advanced animations
-function animateCardEntrance(card) {
-    if ('animate' in card) {
-        card.animate([
-            { 
-                opacity: 0, 
-                transform: 'translateY(50px) scale(0.9) rotateX(10deg)',
-                filter: 'blur(5px)'
-            },
-            { 
-                opacity: 1, 
-                transform: 'translateY(0) scale(1) rotateX(0)',
-                filter: 'blur(0)'
-            }
-        ], {
-            duration: 600,
-            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-            fill: 'both'
-        });
-    }
-}
-
-// Intersection Observer for lazy loading
-const imageObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            img.classList.remove('lazy');
-            imageObserver.unobserve(img);
-        }
-    });
-});
-
-document.querySelectorAll('img.lazy').forEach(img => {
-    imageObserver.observe(img);
-});
-
-// Ambient Light Sensor (experimental)
-if ('AmbientLightSensor' in window) {
-    try {
-        const sensor = new AmbientLightSensor();
-        sensor.addEventListener('reading', () => {
-            const brightness = sensor.illuminance;
-            if (brightness < 10) {
-                document.body.classList.add('dark-environment');
-            } else {
-                document.body.classList.remove('dark-environment');
-            }
-        });
-        sensor.start();
-    } catch (error) {
-        console.log('Ambient Light Sensor not available');
-    }
-}
-
-// Wake Lock API to keep screen on
-async function requestWakeLock() {
-    if ('wakeLock' in navigator) {
-        try {
-            const wakeLock = await navigator.wakeLock.request('screen');
-            console.log('🔆 Wake Lock active');
-            
-            document.addEventListener('visibilitychange', async () => {
-                if (!document.hidden && wakeLock.released) {
-                    await navigator.wakeLock.request('screen');
+                
+                .location-button:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
                 }
-            });
-        } catch (err) {
-            console.log('Wake Lock failed:', err);
-        }
+                
+                .location-badge {
+                    position: absolute;
+                    top: 1rem;
+                    right: 1rem;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.25rem;
+                    z-index: 10;
+                    animation: pulse 2s ease-in-out infinite;
+                }
+                
+                @keyframes pulse {
+                    0%, 100% {
+                        transform: scale(1);
+                        opacity: 0.9;
+                    }
+                    50% {
+                        transform: scale(1.05);
+                        opacity: 1;
+                    }
+                }
+                
+                .weather-card.location-card {
+                    border: 2px solid rgba(102, 126, 234, 0.3);
+                    box-shadow: 0 0 30px rgba(102, 126, 234, 0.2);
+                }
+            </style>
+        `);
+        
+        searchSection.insertBefore(locationBtn, searchSection.firstChild);
     }
 }
 
-// Request wake lock for dashboard mode
-if (urlParams.get('dashboard') === 'true') {
-    requestWakeLock();
-}
-
-// Custom Events
-const weatherEvents = {
-    emit(eventName, detail) {
-        document.dispatchEvent(new CustomEvent(eventName, { detail }));
-    },
-    
-    on(eventName, handler) {
-        document.addEventListener(eventName, handler);
-    }
-};
-
-// Emit custom events
-weatherEvents.on('weatherUpdate', (e) => {
-    console.log('Weather updated:', e.detail);
-});
-
-weatherEvents.on('cityAdded', (e) => {
-    console.log('City added:', e.detail);
-    vibrate([50, 30, 50]);
-});
-
-// Expose UIComponents globally for weather effects integration
-window.UIComponents = UIComponents;
-
-// Final initialization message
-console.log('✨ Weather Ultimate initialized successfully!');
-console.log('💡 Pro tips:');
-console.log('   - Add ?debug=true to URL for debug mode');
-console.log('   - Add ?dashboard=true to keep screen on');
-console.log('   - Press Ctrl+K to focus search');
-console.log('   - Use arrow keys to navigate cards');
-console.log('   - Try debug.testEffects() to see all weather effects');
-console.log('🚀 Enjoy the weather experience!');
+// Počkat na inicializaci aplikace a pak přidat tlačítko
+setTimeout(() => {
+    addLocationButton();
+    // Automaticky získat lokaci po 3 sekundách
+    setTimeout(getUserLocationWeather, 3000);
+}, 1000);
