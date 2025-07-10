@@ -1,0 +1,20 @@
+MIT Licence
+
+Copyright (c) 2024 Michal Bürgermeister
+
+Tímto se uděluje bezúplatné povolení jakékoliv osobě, která získá kopii
+tohoto softwaru a souvisejících souborů dokumentace (dále jen „Software"),
+nakládat se Softwarem bez omezení, včetně práv používat, kopírovat, upravovat,
+slučovat, publikovat, distribuovat, sublicencovat a/nebo prodávat kopie
+Softwaru a umožnit osobám, kterým je Software poskytnut, aby tak činily,
+za následujících podmínek:
+
+Výše uvedené oznámení o autorských právech a toto oznámení o povolení musí
+být zahrnuto ve všech kopiích nebo podstatných částech Softwaru.
+
+SOFTWARE JE POSKYTOVÁN „TAK JAK JE", BEZ ZÁRUKY JAKÉHOKOLIV DRUHU, VÝSLOVNÉ
+NEBO PŘEDPOKLÁDANÉ, VČETNĚ, ALE NIKOLI VÝHRADNĚ, ZÁRUK PRODEJNOSTI,
+VHODNOSTI PRO KONKRÉTNÍ ÚČEL A NEPORUŠENÍ PRÁV. V ŽÁDNÉM PŘÍPADĚ NEBUDOU
+AUTOŘI NEBO DRŽITELÉ AUTORSKÝCH PRÁV ODPOVĚDNÍ ZA JAKÝKOLIV NÁROK, ŠKODY
+NEBO JINOU ODPOVĚDNOST, AŤ UŽ V RÁMCI SMLOUVY, DELIKTU NEBO JINAK,
+VYPLÝVAJÍCÍ ZE SOFTWARU NEBO JEHO POUŽÍVÁNÍ NEBO JINÝCH JEDNÁNÍ V SOFTWARU.
