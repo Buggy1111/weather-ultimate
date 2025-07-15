@@ -86,153 +86,397 @@ class WeatherSounds {
         const existing = document.getElementById('weather-sounds-ui');
         if (existing) existing.remove();
 
+        // Create toggle button
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'sound-panel-toggle';
+        toggleBtn.innerHTML = '🎵';
+        toggleBtn.title = 'Otevřít zvukový panel';
+        
+        // Create sidebar panel
         const ui = document.createElement('div');
         ui.id = 'weather-sounds-ui';
         ui.innerHTML = `
-            <style>
-                #weather-sounds-ui {
-                    position: fixed;
-                    bottom: 2rem;
-                    left: 2rem;
-                    background: rgba(0, 0, 0, 0.8);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 12px;
-                    padding: 1rem;
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                    z-index: 1000;
-                    font-family: system-ui, sans-serif;
-                    color: white;
-                    transition: all 0.3s ease;
-                }
-                
-                #weather-sounds-ui:hover {
-                    background: rgba(0, 0, 0, 0.9);
-                    transform: scale(1.05);
-                }
-                
-                #sound-toggle {
-                    background: none;
-                    border: none;
-                    color: white;
-                    font-size: 1.5rem;
-                    cursor: pointer;
-                    padding: 0.5rem;
-                    border-radius: 8px;
-                    transition: all 0.2s;
-                }
-                
-                #sound-toggle:hover {
-                    background: rgba(255, 255, 255, 0.1);
-                }
-                
-                #sound-toggle.muted {
-                    opacity: 0.5;
-                    text-decoration: line-through;
-                }
-                
-                #volume-slider {
-                    width: 100px;
-                    height: 4px;
-                    -webkit-appearance: none;
-                    appearance: none;
-                    background: rgba(255, 255, 255, 0.2);
-                    outline: none;
-                    border-radius: 2px;
-                }
-                
-                #volume-slider::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 16px;
-                    height: 16px;
-                    background: #667eea;
-                    cursor: pointer;
-                    border-radius: 50%;
-                    transition: all 0.2s;
-                }
-                
-                #volume-slider::-webkit-slider-thumb:hover {
-                    background: #764ba2;
-                    transform: scale(1.2);
-                }
-                
-                #volume-slider::-moz-range-thumb {
-                    width: 16px;
-                    height: 16px;
-                    background: #667eea;
-                    cursor: pointer;
-                    border-radius: 50%;
-                    border: none;
-                }
-                
-                .sound-status {
-                    font-size: 0.875rem;
-                    opacity: 0.7;
-                    min-width: 120px;
-                }
-                
-                .sound-visualizer {
-                    display: flex;
-                    gap: 2px;
-                    align-items: flex-end;
-                    height: 20px;
-                    margin-left: 0.5rem;
-                    opacity: 0;
-                    transition: opacity 0.3s;
-                }
-                
-                #weather-sounds-ui.playing .sound-visualizer {
-                    opacity: 1;
-                }
-                
-                .viz-bar {
-                    width: 3px;
-                    background: linear-gradient(to top, #667eea, #764ba2);
-                    animation: soundWave 0.5s ease-in-out infinite;
-                }
-                
-                .viz-bar:nth-child(1) { animation-delay: 0s; height: 40%; }
-                .viz-bar:nth-child(2) { animation-delay: 0.1s; height: 60%; }
-                .viz-bar:nth-child(3) { animation-delay: 0.2s; height: 80%; }
-                .viz-bar:nth-child(4) { animation-delay: 0.3s; height: 60%; }
-                .viz-bar:nth-child(5) { animation-delay: 0.4s; height: 40%; }
-                
-                @keyframes soundWave {
-                    0%, 100% { transform: scaleY(0.5); }
-                    50% { transform: scaleY(1); }
-                }
-                
-                @media (max-width: 768px) {
-                    #weather-sounds-ui {
-                        bottom: 4rem;
-                        transform: scale(0.9);
-                    }
-                }
-            </style>
+            <div class="sound-panel-header">
+                <h3>🎵 Zvukové efekty</h3>
+                <button id="sound-panel-close">&times;</button>
+            </div>
             
-            <button id="sound-toggle" title="Toggle sounds">${this.enabled ? '🔊' : '🔇'}</button>
-            <input type="range" id="volume-slider" min="0" max="100" value="${this.volume * 100}">
-            <div class="sound-status">Hover na kartu</div>
-            <div class="sound-visualizer">
-                <div class="viz-bar"></div>
-                <div class="viz-bar"></div>
-                <div class="viz-bar"></div>
-                <div class="viz-bar"></div>
-                <div class="viz-bar"></div>
+            <div class="sound-panel-content">
+                <div class="sound-control-group">
+                    <label>Hlavní ovládání</label>
+                    <div class="sound-main-controls">
+                        <button id="sound-toggle" title="Zapnout/Vypnout zvuk">
+                            ${this.enabled ? '🔊' : '🔇'}
+                        </button>
+                        <div class="volume-control">
+                            <span class="volume-label">🔉</span>
+                            <input type="range" id="volume-slider" min="0" max="100" value="${this.volume * 100}">
+                            <span class="volume-value">${Math.round(this.volume * 100)}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sound-control-group">
+                    <label>Stav přehrávání</label>
+                    <div class="sound-status-container">
+                        <div class="sound-status">Hover na kartu pro aktivaci</div>
+                        <div class="sound-visualizer">
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                            <div class="viz-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sound-control-group">
+                    <label>Informace</label>
+                    <div class="sound-info">
+                        <p>💡 Najeďte myší na kartu počasí pro aktivaci zvukových efektů</p>
+                        <p>🌧️ Každý typ počasí má unikátní zvukovou stopu</p>
+                        <p>🌙 Zvuky se mění podle denní/noční doby</p>
+                    </div>
+                </div>
             </div>
         `;
         
+        // Add styles
+        const style = document.createElement('style');
+        style.textContent = `
+            #sound-panel-toggle {
+                position: fixed;
+                left: 2rem;
+                bottom: 2rem;
+                width: 60px;
+                height: 60px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border: none;
+                border-radius: 50%;
+                color: white;
+                font-size: 1.5rem;
+                cursor: pointer;
+                z-index: 1000;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            #sound-panel-toggle:hover {
+                transform: translateY(-2px) scale(1.05);
+                box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+            }
+            
+            #sound-panel-toggle.active {
+                background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            }
+            
+            #weather-sounds-ui {
+                position: fixed;
+                left: -350px;
+                top: 0;
+                width: 350px;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(20px);
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                z-index: 1001;
+                transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                overflow-y: auto;
+                font-family: system-ui, sans-serif;
+                color: white;
+            }
+            
+            #weather-sounds-ui.open {
+                left: 0;
+            }
+            
+            .sound-panel-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                background: rgba(255, 255, 255, 0.05);
+            }
+            
+            .sound-panel-header h3 {
+                margin: 0;
+                font-size: 1.25rem;
+                font-weight: 600;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            
+            #sound-panel-close {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 1.5rem;
+                cursor: pointer;
+                padding: 0.5rem;
+                border-radius: 50%;
+                transition: all 0.2s;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            #sound-panel-close:hover {
+                background: rgba(255, 255, 255, 0.1);
+                transform: rotate(90deg);
+            }
+            
+            .sound-panel-content {
+                padding: 1.5rem;
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .sound-control-group {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .sound-control-group label {
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: rgba(255, 255, 255, 0.7);
+                font-weight: 600;
+            }
+            
+            .sound-main-controls {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            #sound-toggle {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                border: none;
+                color: white;
+                font-size: 1.5rem;
+                cursor: pointer;
+                padding: 1rem;
+                border-radius: 12px;
+                transition: all 0.3s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 60px;
+            }
+            
+            #sound-toggle:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+            }
+            
+            #sound-toggle.muted {
+                background: linear-gradient(135deg, #6b7280, #9ca3af);
+                opacity: 0.7;
+            }
+            
+            .volume-control {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                background: rgba(255, 255, 255, 0.05);
+                padding: 1rem;
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .volume-label {
+                font-size: 1.25rem;
+                min-width: 24px;
+            }
+            
+            #volume-slider {
+                flex: 1;
+                height: 6px;
+                -webkit-appearance: none;
+                appearance: none;
+                background: rgba(255, 255, 255, 0.2);
+                outline: none;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+            
+            #volume-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 20px;
+                height: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                cursor: pointer;
+                border-radius: 50%;
+                transition: all 0.2s;
+                box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+            }
+            
+            #volume-slider::-webkit-slider-thumb:hover {
+                transform: scale(1.2);
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
+            }
+            
+            #volume-slider::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                cursor: pointer;
+                border-radius: 50%;
+                border: none;
+                box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+            }
+            
+            .volume-value {
+                font-size: 0.875rem;
+                font-weight: 600;
+                color: #667eea;
+                min-width: 40px;
+                text-align: right;
+            }
+            
+            .sound-status-container {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 1rem;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .sound-status {
+                font-size: 0.875rem;
+                color: rgba(255, 255, 255, 0.8);
+                margin-bottom: 1rem;
+                text-align: center;
+            }
+            
+            .sound-visualizer {
+                display: flex;
+                gap: 4px;
+                align-items: flex-end;
+                height: 40px;
+                justify-content: center;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            
+            #weather-sounds-ui.playing .sound-visualizer {
+                opacity: 1;
+            }
+            
+            .viz-bar {
+                width: 4px;
+                background: linear-gradient(to top, #667eea, #764ba2);
+                border-radius: 2px;
+                animation: soundWave 0.6s ease-in-out infinite;
+            }
+            
+            .viz-bar:nth-child(1) { animation-delay: 0s; height: 30%; }
+            .viz-bar:nth-child(2) { animation-delay: 0.1s; height: 60%; }
+            .viz-bar:nth-child(3) { animation-delay: 0.2s; height: 100%; }
+            .viz-bar:nth-child(4) { animation-delay: 0.3s; height: 60%; }
+            .viz-bar:nth-child(5) { animation-delay: 0.4s; height: 30%; }
+            
+            @keyframes soundWave {
+                0%, 100% { transform: scaleY(0.3); }
+                50% { transform: scaleY(1); }
+            }
+            
+            .sound-info {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 12px;
+                padding: 1rem;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .sound-info p {
+                margin: 0 0 0.75rem 0;
+                font-size: 0.875rem;
+                color: rgba(255, 255, 255, 0.7);
+                line-height: 1.5;
+            }
+            
+            .sound-info p:last-child {
+                margin-bottom: 0;
+            }
+            
+            /* Mobile responsive */
+            @media (max-width: 768px) {
+                #weather-sounds-ui {
+                    width: 100%;
+                    left: -100%;
+                }
+                
+                #weather-sounds-ui.open {
+                    left: 0;
+                }
+                
+                #sound-panel-toggle {
+                    left: 1rem;
+                    bottom: 1rem;
+                    width: 50px;
+                    height: 50px;
+                    font-size: 1.25rem;
+                }
+                
+                .sound-panel-content {
+                    padding: 1rem;
+                    gap: 1.5rem;
+                }
+            }
+        `;
+        
+        document.head.appendChild(style);
+        document.body.appendChild(toggleBtn);
         document.body.appendChild(ui);
         
         // Event listeners
+        toggleBtn.addEventListener('click', () => this.togglePanel());
+        document.getElementById('sound-panel-close').addEventListener('click', () => this.togglePanel());
         document.getElementById('sound-toggle').addEventListener('click', () => this.toggleSound());
         document.getElementById('volume-slider').addEventListener('input', (e) => {
             this.volume = e.target.value / 100;
             this.updateVolume();
+            document.querySelector('.volume-value').textContent = `${Math.round(this.volume * 100)}%`;
         });
+        
+        // Close panel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!ui.contains(e.target) && !toggleBtn.contains(e.target) && ui.classList.contains('open')) {
+                this.togglePanel();
+            }
+        });
+        
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && ui.classList.contains('open')) {
+                this.togglePanel();
+            }
+        });
+    }
+    
+    togglePanel() {
+        const ui = document.getElementById('weather-sounds-ui');
+        const toggleBtn = document.getElementById('sound-panel-toggle');
+        
+        ui.classList.toggle('open');
+        toggleBtn.classList.toggle('active');
+        
+        if (ui.classList.contains('open')) {
+            toggleBtn.title = 'Zavřít zvukový panel';
+        } else {
+            toggleBtn.title = 'Otevřít zvukový panel';
+        }
     }
 
     toggleSound() {

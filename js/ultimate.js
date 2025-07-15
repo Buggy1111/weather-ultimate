@@ -403,6 +403,11 @@ class UIComponents {
         // Get timezone offset from API (in seconds)
         const timezoneOffset = data.timezone || 0;
         
+        // Get current time in city's timezone
+        const currentTimeUTC = new Date();
+        const currentTimeLocal = new Date(currentTimeUTC.getTime() + timezoneOffset * 1000);
+        const currentTime = currentTimeLocal.toISOString().substring(11, 16);
+        
         // Convert sunrise and sunset to local time
         const sunriseUTC = new Date(data.sys.sunrise * 1000);
         const sunsetUTC = new Date(data.sys.sunset * 1000);
@@ -465,6 +470,10 @@ class UIComponents {
                 <header class="weather-card__header">
                     <h3 class="weather-card__city">${city.name}</h3>
                     <p class="weather-card__country">${city.country || ''}</p>
+                    <div class="weather-card__time">
+                        <span class="time-icon">🕐</span>
+                        <span class="time-value">${currentTime}</span>
+                    </div>
                 </header>
                 
                 <div class="weather-card__main">
@@ -1263,6 +1272,16 @@ class WeatherUltimate {
                         setTimeout(() => {
                             card.style.opacity = '1';
                         }, 300);
+
+                        // Update time in the card
+                        const timeElement = card.querySelector('.time-value');
+                        if (timeElement) {
+                            const timezoneOffset = newData.timezone || 0;
+                            const currentTimeUTC = new Date();
+                            const currentTimeLocal = new Date(currentTimeUTC.getTime() + timezoneOffset * 1000);
+                            const currentTime = currentTimeLocal.toISOString().substring(11, 16);
+                            timeElement.textContent = currentTime;
+                        }
 
                         // Update weather effects if weather changed
                         if (this.cardEffects) {

@@ -509,6 +509,30 @@ body {
 .weather-card__country {
     font-size: var(--fs-sm);
     color: rgba(255, 255, 255, 0.7);
+}
+
+.weather-card__time {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: fit-content;
+}
+
+.time-icon {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.time-value {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Courier New', monospace;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
@@ -1413,9 +1437,12 @@ body {
         display: none;
     }
     
-    #weather-sounds-ui {
-        bottom: 4rem;
-        transform: scale(0.9);
+    #sound-panel-toggle {
+        left: 1rem;
+        bottom: 1rem;
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
     }
     
     #debug-panel {
