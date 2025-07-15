@@ -3,15 +3,15 @@
  * Professional weather application with advanced features
  */
 
-// Configuration
+// Configuration - Use external config with fallbacks
 const CONFIG = {
-    API_KEY: '4078c40502499b6489b8982b0930b28c',
-    API_BASE_URL: 'https://api.openweathermap.org/data/2.5',
-    GEO_API_URL: 'https://api.openweathermap.org/geo/1.0',
-    CACHE_NAME: 'weather-ultimate-v1',
-    CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
-    UPDATE_INTERVAL: 60 * 1000, // 1 minute - EXACTLY AS REQUESTED
-    ANIMATION_DURATION: 300,
+    API_KEY: (typeof window !== 'undefined' && window.API_CONFIG?.WEATHER_API_KEY) || '4078c40502499b6489b8982b0930b28c',
+    API_BASE_URL: (typeof window !== 'undefined' && window.API_CONFIG?.BASE_URL) || 'https://api.openweathermap.org/data/2.5',
+    GEO_API_URL: (typeof window !== 'undefined' && window.API_CONFIG?.GEO_URL) || 'https://api.openweathermap.org/geo/1.0',
+    CACHE_NAME: (typeof window !== 'undefined' && window.APP_CONFIG?.CACHE_NAME) || 'weather-ultimate-v1',
+    CACHE_DURATION: (typeof window !== 'undefined' && window.APP_CONFIG?.CACHE_DURATION) || 5 * 60 * 1000, // 5 minutes
+    UPDATE_INTERVAL: (typeof window !== 'undefined' && window.APP_CONFIG?.UPDATE_INTERVAL) || 60 * 1000, // 1 minute - EXACTLY AS REQUESTED
+    ANIMATION_DURATION: (typeof window !== 'undefined' && window.APP_CONFIG?.ANIMATION_DURATION) || 300,
     DEFAULT_CITIES: [
         { name: 'Praha', country: 'CZ', lat: 50.0755, lon: 14.4378 },
         { name: 'New York', country: 'US', lat: 40.7128, lon: -74.0060 },
@@ -184,15 +184,21 @@ class WeatherService {
 
         return this.queueRequest(async () => {
             const url = `${CONFIG.API_BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${CONFIG.API_KEY}&units=metric&lang=cs`;
-            const response = await fetch(url);
             
-            if (!response.ok) {
-                throw new Error(`Weather API Error: ${response.status}`);
-            }
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`Weather API Error: ${response.status} - ${response.statusText}`);
+                }
 
-            const data = await response.json();
-            await this.cache.set(cacheKey, data);
-            return data;
+                const data = await response.json();
+                await this.cache.set(cacheKey, data);
+                return data;
+            } catch (error) {
+                console.error('❌ Weather API fetch error:', error);
+                throw error;
+            }
         });
     }
 
@@ -207,27 +213,39 @@ class WeatherService {
 
         return this.queueRequest(async () => {
             const url = `${CONFIG.API_BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${CONFIG.API_KEY}&units=metric&lang=cs`;
-            const response = await fetch(url);
             
-            if (!response.ok) {
-                throw new Error(`Forecast API Error: ${response.status}`);
-            }
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`Forecast API Error: ${response.status} - ${response.statusText}`);
+                }
 
-            const data = await response.json();
-            await this.cache.set(cacheKey, data);
-            return data;
+                const data = await response.json();
+                await this.cache.set(cacheKey, data);
+                return data;
+            } catch (error) {
+                console.error('❌ Forecast API fetch error:', error);
+                throw error;
+            }
         });
     }
 
     async searchCity(query) {
         const url = `${CONFIG.GEO_API_URL}/direct?q=${encodeURIComponent(query)}&limit=5&appid=${CONFIG.API_KEY}`;
-        const response = await fetch(url);
         
-        if (!response.ok) {
-            throw new Error(`Geo API Error: ${response.status}`);
-        }
+        try {
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`Geo API Error: ${response.status} - ${response.statusText}`);
+            }
 
-        return response.json();
+            return response.json();
+        } catch (error) {
+            console.error('❌ Geo API fetch error:', error);
+            throw error;
+        }
     }
 
     async queueRequest(requestFn) {
@@ -622,6 +640,8 @@ class UIComponents {
             'rain': '🌧️',
             'drizzle': '🌦️',
             'thunderstorm': '⛈️',
+            'thunder': '⛈️',
+            'storm': '⛈️',
             'snow': '❄️',
             'mist': '🌫️',
             'fog': '🌫️',
@@ -1342,11 +1362,86 @@ const features = {
     clipboard: 'clipboard' in navigator
 };
 
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+                console.log('✅ Service Worker registered:', registration);
+                
+                // Listen for updates
+                registration.addEventListener('updatefound', () => {
+                    console.log('🔄 Service Worker: Update found');
+                    const newWorker = registration.installing;
+                    
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New version available
+                            if (window.weatherApp) {
+                                window.weatherApp.showNotification(
+                                    'Aktualizace', 
+                                    'Nová verze je k dispozici. Obnovte stránku.', 
+                                    'info'
+                                );
+                            }
+                        }
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('❌ Service Worker registration failed:', error);
+            });
+    });
+    
+    // Listen for SW messages
+    navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data && event.data.type === 'REFRESH_WEATHER_DATA') {
+            if (window.weatherApp) {
+                window.weatherApp.loadDefaultCities();
+            }
+        }
+    });
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Weather Ultimate starting...');
     console.log('🔍 Feature detection:', features);
-    window.weatherApp = new WeatherUltimate();
+    console.log('📋 Configuration:', {
+        API_KEY: CONFIG.API_KEY ? '✅ Present' : '❌ Missing',
+        API_BASE_URL: CONFIG.API_BASE_URL,
+        CACHE_NAME: CONFIG.CACHE_NAME,
+        UPDATE_INTERVAL: CONFIG.UPDATE_INTERVAL
+    });
+    
+    try {
+        window.weatherApp = new WeatherUltimate();
+    } catch (error) {
+        console.error('❌ Failed to initialize Weather Ultimate:', error);
+        
+        // Show error to user
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ff4444;
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            z-index: 9999;
+            text-align: center;
+        `;
+        errorDiv.innerHTML = `
+            <h2>❌ Chyba aplikace</h2>
+            <p>Aplikace se nepodařilo spustit. Zkontrolujte konzoli pro více informací.</p>
+            <button onclick="location.reload()" style="background: white; color: #ff4444; border: none; padding: 0.5rem 1rem; border-radius: 4px; margin-top: 1rem; cursor: pointer;">
+                Obnovit stránku
+            </button>
+        `;
+        document.body.appendChild(errorDiv);
+    }
     
     // Connect with weather effects if available
     if (window.WeatherCardEffects) {

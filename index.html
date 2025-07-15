@@ -6,13 +6,13 @@
     <meta name="description" content="Next-gen weather experience s AI predikcemi a real-time vizualizacemi">
     <meta name="theme-color" content="#667eea">
     <meta name="author" content="Michal Bürgermeister">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.openweathermap.org; font-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none';">
     <title>Weather Ultimate - Budoucnost předpovědi počasí</title>
     
     <!-- Favicony - relativní cesty -->
-    <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon/favicon-16x16.png">
-    <link rel="shortcut icon" href="./favicon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="48x48" href="./favicon/favicon-48x48.png">
     
     <!-- Apple zařízení -->
     <link rel="apple-touch-icon" sizes="180x180" href="./favicon/apple-touch-icon.png">
@@ -124,6 +124,9 @@
     <div id="notification" class="notification" role="alert" aria-live="assertive"></div>
 
     <!-- Scripts -->
+    <!-- Configuration -->
+    <script src="./config.js"></script>
+    
     <!-- Three.js for 3D effects -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     

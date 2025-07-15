@@ -315,6 +315,8 @@ class WeatherCardEffects {
                 this.createSnowEffect(card, cardRect, effectInfo);
                 break;
             case 'thunderstorm':
+            case 'thunder':
+            case 'storm':
                 this.createThunderstormEffect(card, cardRect, effectInfo);
                 break;
             case 'drizzle':

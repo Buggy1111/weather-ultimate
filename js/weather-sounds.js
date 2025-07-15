@@ -365,6 +365,8 @@ class WeatherSounds {
                     soundGenerator = this.createRainSound(isNight);
                     break;
                 case 'thunderstorm':
+                case 'thunder':
+                case 'storm':
                     soundGenerator = this.createThunderstormSound(card, isNight);
                     break;
                 case 'drizzle':
@@ -788,6 +790,7 @@ class WeatherSounds {
             windData[i] *= 3.5;
         }
         
+        const windNoise = this.audioContext.createBufferSource();
         windNoise.buffer = windBuffer;
         windNoise.loop = true;
         

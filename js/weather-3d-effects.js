@@ -120,6 +120,8 @@ class Weather3DEffects {
                 this.createRainEffect3D(scene, cardId);
                 break;
             case 'thunderstorm':
+            case 'thunder':
+            case 'storm':
                 this.createThunderstormEffect3D(scene, cardId);
                 break;
             case 'snow':
