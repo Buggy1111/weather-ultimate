@@ -703,9 +703,173 @@ class WeatherUltimate {
         this.initializeApp();
     }
 
+    // Mobile detection
+    isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    }
+
+    // PWA Installation Setup
+    setupPWAInstall() {
+        let deferredPrompt;
+        
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('💾 PWA Install prompt available');
+            
+            // Prevent default mini-infobar
+            e.preventDefault();
+            
+            // Store the event for later use
+            deferredPrompt = e;
+            
+            // Show custom install banner
+            this.showInstallBanner(deferredPrompt);
+        });
+        
+        // Handle app installation
+        window.addEventListener('appinstalled', (e) => {
+            console.log('✅ PWA installed successfully');
+            this.hideInstallBanner();
+            
+            // Show success notification
+            this.showNotification('Úspěch!', 'Aplikace byla úspěšně nainstalována', 'success');
+        });
+        
+        // Check if already installed
+        if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('📱 App is running in standalone mode');
+            return;
+        }
+        
+        // iOS Safari specific handling
+        if (this.isIOS() && !window.navigator.standalone) {
+            this.showIOSInstallBanner();
+        }
+    }
+
+    showInstallBanner(deferredPrompt) {
+        // Remove existing banner
+        const existingBanner = document.getElementById('pwa-install-banner');
+        if (existingBanner) existingBanner.remove();
+        
+        // Create install banner
+        const banner = document.createElement('div');
+        banner.id = 'pwa-install-banner';
+        banner.innerHTML = `
+            <div class="install-banner">
+                <div class="install-banner__content">
+                    <div class="install-banner__icon">📱</div>
+                    <div class="install-banner__text">
+                        <h3>Nainstalovat aplikaci</h3>
+                        <p>Získejte rychlý přístup k předpovědi počasí</p>
+                    </div>
+                </div>
+                <div class="install-banner__actions">
+                    <button class="install-btn install-btn--primary" id="installBtn">
+                        Nainstalovat
+                    </button>
+                    <button class="install-btn install-btn--secondary" id="dismissBtn">
+                        Později
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(banner);
+        
+        // Add event listeners
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            try {
+                // Show install prompt
+                deferredPrompt.prompt();
+                
+                // Wait for user choice
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    console.log('✅ User accepted install');
+                } else {
+                    console.log('❌ User dismissed install');
+                }
+                
+                // Reset deferred prompt
+                deferredPrompt = null;
+                this.hideInstallBanner();
+                
+            } catch (error) {
+                console.error('Install error:', error);
+                this.hideInstallBanner();
+            }
+        });
+        
+        document.getElementById('dismissBtn').addEventListener('click', () => {
+            this.hideInstallBanner();
+            localStorage.setItem('pwa-install-dismissed', Date.now());
+        });
+        
+        // Show banner with animation
+        requestAnimationFrame(() => {
+            banner.classList.add('install-banner--show');
+        });
+    }
+
+    showIOSInstallBanner() {
+        // Check if user already dismissed
+        const dismissed = localStorage.getItem('ios-install-dismissed');
+        if (dismissed && Date.now() - dismissed < 7 * 24 * 60 * 60 * 1000) { // 7 days
+            return;
+        }
+        
+        const banner = document.createElement('div');
+        banner.id = 'ios-install-banner';
+        banner.innerHTML = `
+            <div class="install-banner ios-install-banner">
+                <div class="install-banner__content">
+                    <div class="install-banner__icon">🍎</div>
+                    <div class="install-banner__text">
+                        <h3>Přidat na plochu</h3>
+                        <p>Klepněte na <strong>Sdílet</strong> → <strong>Přidat na plochu</strong></p>
+                    </div>
+                </div>
+                <div class="install-banner__actions">
+                    <button class="install-btn install-btn--secondary" id="iosDismissBtn">
+                        Rozumím
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(banner);
+        
+        document.getElementById('iosDismissBtn').addEventListener('click', () => {
+            banner.remove();
+            localStorage.setItem('ios-install-dismissed', Date.now());
+        });
+        
+        // Show banner with animation
+        requestAnimationFrame(() => {
+            banner.classList.add('install-banner--show');
+        });
+    }
+
+    hideInstallBanner() {
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner) {
+            banner.classList.remove('install-banner--show');
+            setTimeout(() => banner.remove(), 300);
+        }
+    }
+
+    isIOS() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
     async initializeApp() {
-        const canvas = document.getElementById('particle-canvas');
-        this.particleSystem = new ParticleSystem(canvas);
+        // Skip heavy effects on mobile
+        if (!this.isMobile()) {
+            const canvas = document.getElementById('particle-canvas');
+            this.particleSystem = new ParticleSystem(canvas);
+        }
 
         this.setupEventListeners();
         this.state.subscribe('stateChange', () => this.updateUI());
@@ -714,6 +878,7 @@ class WeatherUltimate {
         await this.loadDefaultCities();
         this.startRealTimeUpdates();
         this.setupIntersectionObserver();
+        this.setupPWAInstall();
     }
 
     setupEventListeners() {
@@ -1252,6 +1417,12 @@ class WeatherUltimate {
         
         // Set interval for exactly 1 minute as requested
         this.updateInterval = setInterval(async () => {
+            // Skip updates if page is hidden or not visible
+            if (document.hidden || !document.hasFocus()) {
+                console.log('📱 Skipping update - page not visible');
+                return;
+            }
+            
             console.log('🔄 Updating weather data...');
             const cities = Array.from(this.state.state.cities.values());
             
@@ -1267,12 +1438,10 @@ class WeatherUltimate {
                     // Find the card and update it
                     const card = document.querySelector(`[data-city="${cityData.name}"]`);
                     if (card) {
-                        // Visual feedback for update
-                        card.style.opacity = '0.7';
-                        setTimeout(() => {
-                            card.style.opacity = '1';
-                        }, 300);
-
+                        // Gentle update for mobile
+                        card.style.transition = 'opacity 0.2s ease';
+                        card.style.opacity = '0.8';
+                        
                         // Update time in the card
                         const timeElement = card.querySelector('.time-value');
                         if (timeElement) {
@@ -1282,9 +1451,14 @@ class WeatherUltimate {
                             const currentTime = currentTimeLocal.toISOString().substring(11, 16);
                             timeElement.textContent = currentTime;
                         }
+                        
+                        // Restore opacity
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                        }, 200);
 
-                        // Update weather effects if weather changed
-                        if (this.cardEffects) {
+                        // Update weather effects if weather changed (skip on mobile)
+                        if (this.cardEffects && !this.isMobile()) {
                             const weatherType = newData.weather[0].main;
                             this.cardEffects.createCardEffect(card, weatherType);
                         }
@@ -1473,12 +1647,26 @@ document.addEventListener('DOMContentLoaded', () => {
 // Visibility change handler
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-        console.log('🔋 App hidden, pausing animations');
-        document.querySelectorAll('.weather-card').forEach(card => {
-            card.style.animationPlayState = 'paused';
-        });
+        console.log('🔋 App hidden, pausing updates');
+        // Clear any pending updates
+        if (window.weatherApp && window.weatherApp.updateInterval) {
+            clearInterval(window.weatherApp.updateInterval);
+        }
+        
+        // Pause animations on mobile
+        if (window.weatherApp && window.weatherApp.isMobile()) {
+            document.querySelectorAll('.weather-card').forEach(card => {
+                card.style.animationPlayState = 'paused';
+            });
+        }
     } else {
-        console.log('👁️ App visible, resuming animations');
+        console.log('👁️ App visible, resuming updates');
+        // Resume updates
+        if (window.weatherApp) {
+            window.weatherApp.startRealTimeUpdates();
+        }
+        
+        // Resume animations
         document.querySelectorAll('.weather-card').forEach(card => {
             card.style.animationPlayState = 'running';
         });
