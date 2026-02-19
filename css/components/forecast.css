@@ -147,6 +147,7 @@
 .fc-metric--rain .fc-metric__val { color: #60a5fa; }
 .fc-metric--snow .fc-metric__val { color: #93c5fd; }
 .fc-metric--wind .fc-metric__val { color: #fbbf24; }
+.fc-metric--feels .fc-metric__val { color: #f472b6; }
 
 /* Temperature Chart */
 .forecast-chart {

@@ -1,328 +1,153 @@
-# Weather Ultimate 🌦️
+# Weather Ultimate
 
-Aplikace počasí nové generace s AI predikcemi, real-time 3D vizualizacemi a pohlcujícími zvukovými efekty. Zažijte počasí jako nikdy předtím!
+Next-gen weather experience s AI predikcemi, real-time 3D vizualizacemi a pohlcujícimi zvukovymi efekty. Vanilla JS, zero dependencies (kromě Three.js).
 
-## ✨ Funkce
+**[Live Demo](https://buggy1111.github.io/weather-ultimate/)**
 
-### 🎯 Hlavní funkce
-- **Real-time data počasí** - Aktualizace každých 60 sekund
-- **AI předpovědi počasí** - Chytré přehledy založené na globálních meteorologických datech
-- **Sledování více měst** - Monitorujte počasí na více místech současně
-- **7-denní předpověď** - Detailní týdenní předpověď s teplotními grafy
+## Funkce
 
-### 🎮 Vizuální efekty
-- **3D animace počasí** - Poháněno Three.js
-  - Realistický déšť s efekty dopadu
-  - Dynamická akumulace sněhu
-  - Bouřky s blesky
-  - Volumetrická mlha
-  - Animované sluneční paprsky a mraky
-- **Systém částic** - Interaktivní částice na pozadí
-- **Glass-morphism UI** - Moderní efekty matného skla
+### Hlavni
+- **Real-time data** — aktualizace každych 60s, IndexedDB cache
+- **100% OpenWeatherMap API** — current weather, 5-day forecast, air pollution
+- **AI predikce** — chytra lokalni analyza dat (bez externi AI API)
+- **AI analyza per mesto** — 7+ insights v forecast modalu (trendy, extremy, srazky, vitr, tlak, vikend, mlhy, AQI)
+- **7-denni predpoved** — teploty, pocitova teplota, smer vetru, srazky, oblacnost, tlak, narazy
+- **Kvalita vzduchu** — AQI index + 8 polutantu (PM2.5, PM10, O3, NO2, NO, NH3, SO2, CO)
+- **Canvas teplotni graf** — dynamicka sirka, max/min krivky
 
-### 🔊 Zvuková zkušenost
-- **Realistické zvuky počasí** - Syntetizováno pomocí Web Audio API
-  - Vícevrstvý déšť s jednotlivými kapkami
-  - Hrom s dynamickou intenzitou
-  - Variace větru pro různé počasí
-  - Denní/noční ambientní zvuky
-  - Ptačí zpěv za jasných dnů
-  - Cvrčci v noci
+### Vizualni efekty
+- **3D animace pocasi** (Three.js r160) — dest, snih, bourky s blesky, mlha, slunecni paprsky, mraky
+- **2D canvas efekty** — casticovy system, dest/snih/blesky overlay
+- **Canvas mesic** — realisticka faze mesice s kratery a mraky (ne emoji)
+- **Glass-morphism UI** — backdrop-filter blur, CSS variables
 
-### 📱 Responzivní design
-- **Mobile First** - Optimalizováno pro všechna zařízení
-- **Škáluje od 320px do 6K displejů**
-- **Optimalizované pro dotyk**
-- **Připraveno jako Progressive Web App**
+### Zvuky
+- **Web Audio API synteza** — dest (vicevrstvy), hrom, vitr, ptaci (den), cvrcci (noc)
+- **Automaticky dle pocasi** — intenzita podle skutecnych podminek
+- **Ovladani hlasitosti** — UI slider + mute
 
-### 🌍 Lokalizace
-- **Český jazyk** - Kompletní české překlady
-- **Automatická detekce polohy**
-- **Mezinárodní vyhledávání měst**
+### Responzivita
+- **320px az 6K displeje** — 8 breakpointu
+- **Mobile-first** + touch optimalizace
+- **zoom: 0.75** pro vetsi efektivni viewport
 
-## 🚀 Demo
+### Dalsi
+- Automaticka detekce polohy (Geolocation API)
+- Cesky jazyk (popisy pocasi, dny, smery vetru)
+- Debug rezim (`?debug=true`)
+- Dashboard rezim (`?dashboard=true`)
+- Klavesove zkratky (Ctrl+K hledani, Esc zavrit, sipky navigace)
 
-**[Live Demo →](https://your-username.github.io/weather-ultimate/)**
+## Tech stack
 
-### Demo města
-Aplikace obsahuje přednastavené počasí pro:
-- 🇨🇿 Praha
-- 🇺🇸 New York
-- 🇯🇵 Tokyo
-- 🇦🇺 Sydney
-- 🇬🇧 London
-- 🇫🇷 Paris
+| Co | Cim |
+|---|---|
+| Frontend | Vanilla JavaScript ES6+ (zero build) |
+| 3D | Three.js r160.1 (UMD) |
+| Audio | Web Audio API |
+| CSS | Modularni (13 souboru), CSS Variables |
+| API | OpenWeatherMap (current + forecast + air pollution) |
+| Cache | IndexedDB |
+| Celkem | ~6200 radku JS, ~1200 radku CSS |
 
-## 🛠️ Technologie
+## Instalace
 
-- **Frontend**: Vanilla JavaScript (ES6+)
-- **3D Grafika**: Three.js r128
-- **Audio**: Web Audio API
-- **Stylování**: Vlastní CSS s CSS Variables
-- **Data počasí**: OpenWeatherMap API
-- **Build**: Není potřeba žádný build proces! Čistý vanilla JS
-- **Architektura**: Modulární, třídní design
-
-## 📦 Instalace
-
-### Požadavky
-- Moderní webový prohlížeč (Chrome, Firefox, Safari, Edge)
-- OpenWeatherMap API klíč ([Získejte zdarma](https://openweathermap.org/api))
-
-### Lokální vývoj
-
-1. **Naklonujte repozitář**
-   ```bash
-   git clone https://github.com/Buggy1111/weather-ultimate.git
-   cd weather-ultimate
-   ```
-
-2. **Získejte API klíč**
-   - Zaregistrujte se na [OpenWeatherMap](https://openweathermap.org/api)
-   - Zkopírujte váš API klíč
-
-3. **Nastavte API klíč**
-   ```javascript
-   // V js/ultimate.js nahraďte svým klíčem:
-   const CONFIG = {
-       API_KEY: 'váš_api_klíč_zde',
-       // ...
-   };
-   ```
-
-4. **Spusťte lokální server**
-   ```bash
-   # Pomocí Pythonu
-   python -m http.server 8000
-
-   # Pomocí Node.js
-   npx serve
-
-   # Pomocí PHP
-   php -S localhost:8000
-   ```
-
-5. **Otevřete v prohlížeči**
-   ```
-   http://localhost:8000
-   ```
-
-## 🏗️ Struktura projektu
-
-```
-weather-ultimate/
-├── index.html           # Hlavní HTML soubor
-├── styles.css           # Všechny styly (responzivní)
-├── manifest.json        # PWA manifest
-├── LICENSE              # MIT licence
-├── README.md            # Tento soubor
-├── favicon/             # Ikony aplikace
-│   ├── favicon.svg
-│   ├── favicon.ico
-│   ├── favicon-16x16.png
-│   ├── favicon-32x32.png
-│   ├── apple-touch-icon.png
-│   ├── android-chrome-192x192.png
-│   ├── android-chrome-512x512.png
-│   └── mstile-144x144.png
-└── js/                  # JavaScript moduly
-    ├── ultimate.js         # Hlavní aplikační logika
-    ├── weather-effects.js  # 2D efekty počasí
-    ├── weather-3d-effects.js # 3D animace počasí
-    └── weather-sounds.js   # Syntéza zvuku
+```bash
+git clone https://github.com/Buggy1111/weather-ultimate.git
+cd weather-ultimate
 ```
 
-### Přehled modulů
-
-- **`js/ultimate.js`** - Jádro aplikace
-  - Správa stavu
-  - Integrace API
-  - UI komponenty
-  - Real-time aktualizace
-
-- **`js/weather-effects.js`** - 2D vizuální efekty
-  - Dešťové kapky
-  - Sněhové částice
-  - Blesky
-  - Vrstvy mlhy
-
-- **`js/weather-3d-effects.js`** - 3D scény
-  - Three.js integrace
-  - 3D prostředí počasí
-  - Optimalizováno pro výkon
-
-- **`js/weather-sounds.js`** - Zvukový engine
-  - Syntetické zvuky počasí
-  - Denní/noční variace
-  - Ovládání hlasitosti
-  - Podpora touch-to-play
-
-## 🎮 Použití
-
-### Hledání měst
-1. Klikněte na vyhledávací pole
-2. Napište název města
-3. Vyberte z návrhů
-4. Město se přidá na váš dashboard
-
-### Interakce s kartami počasí
-- **Hover** - Aktivuje zvuky a efekty počasí
-- **Klik** - Zobrazí 7-denní předpověď
-- **Live odznak** - Indikuje real-time data
-
-### Ovládání zvuku
-- 🔊/🔇 - Zapnout/vypnout zvuky
-- Posuvník hlasitosti - Nastavení úrovně zvuku
-- První interakce odemkne zvuk (požadavek prohlížeče)
-
-### Klávesové zkratky
-- `Ctrl/Cmd + K` - Zaměřit vyhledávání
-- `Escape` - Zavřít modaly/návrhy
-- `Šipky` - Navigace mezi kartami počasí
-
-## 🎨 Přizpůsobení
-
-### Změna barev tématu
-```css
-/* V styles.css */
-:root {
-    --hue-primary: 250;    /* Změňte odstín primární barvy */
-    --hue-accent: 280;     /* Změňte odstín akcentové barvy */
-    --saturation: 70%;
-    --lightness: 60%;
-}
-```
-
-### Přidání nových efektů počasí
+### API klic
+1. Registrace na [OpenWeatherMap](https://openweathermap.org/api) (free plan staci)
+2. V `js/ultimate.js` nastavte:
 ```javascript
-// V js/weather-effects.js
-createCustomEffect(card, rect, effectInfo) {
-    // Vaše vlastní logika efektu
-}
-```
-
-### Úprava intervalu aktualizace
-```javascript
-// V js/ultimate.js
 const CONFIG = {
-    UPDATE_INTERVAL: 60 * 1000, // Změňte na požadované milisekundy
+    API_KEY: 'vas_api_klic',
 };
 ```
 
-## 📱 Progressive Web App
-
-Pro možnost instalace:
-
-1. **Přidejte manifest.json**
-   ```json
-   {
-     "name": "Weather Ultimate",
-     "short_name": "Weather",
-     "start_url": "/",
-     "display": "standalone",
-     "theme_color": "#0a0a0a",
-     "background_color": "#000000"
-   }
-   ```
-
-2. **Propojte v HTML**
-   ```html
-   <link rel="manifest" href="manifest.json">
-   ```
-
-3. **Přidejte service worker** (volitelné pro offline podporu)
-
-## 🐛 Debug režim
-
-Přidejte `?debug=true` k URL pro debug panel zobrazující:
-- FPS počítadlo
-- Využití paměti
-- Počet aktivních efektů
-- Statistiky cache
-- Stav sítě
-
-### Debug příkazy (v konzoli)
-```javascript
-debug.clearCache()        // Vymazat cache počasí
-debug.showState()         // Zobrazit stav aplikace
-debug.toggleAnimations()  // Přepnout animace
-debug.addRandomCity()     // Přidat náhodné město
-debug.exportData()        // Exportovat data počasí
-debug.testEffects()       // Otestovat všechny efekty
-```
-
-## 🚀 Nasazení
-
-### GitHub Pages
-1. Jděte do Settings → Pages
-2. Vyberte source: Deploy from branch
-3. Vyberte branch: main
-4. Vyberte složku: / (root)
-5. Uložte a počkejte na nasazení
-
-### Netlify
-1. Build command: (nechte prázdné)
-2. Publish directory: `.`
-3. Deploy!
-
-### Vercel
+### Spusteni
 ```bash
-npm i -g vercel
-vercel
+python -m http.server 8000
+# nebo: npx serve
+# nebo: php -S localhost:8000
 ```
 
-## 🤝 Přispívání
+## Struktura
 
-Příspěvky jsou vítány! Nejdříve si prosím přečtěte [CONTRIBUTING.md](CONTRIBUTING.md).
+```
+weather-ultimate/
+├── index.html
+├── manifest.json
+├── css/
+│   ├── main.css              # importy
+│   ├── variables.css         # CSS custom properties
+│   ├── base.css              # reset, bg, scrollbar
+│   ├── layout.css            # container, hero
+│   ├── effects.css           # animace, 3D kontejner
+│   ├── utilities.css         # helpers
+│   ├── responsive.css        # 8 breakpointu (320px-6K)
+│   └── components/
+│       ├── cards.css         # weather karty, detaily, hourly
+│       ├── forecast.css      # modal, day cards, chart, AQI, AI insight
+│       ├── search.css        # vyhledavani, suggestions
+│       ├── stats.css         # quick stats
+│       ├── ai-insights.css   # AI predikce sekce
+│       └── notifications.css
+├── js/
+│   ├── ultimate.js           # hlavni app (~2450r) — WeatherService, UIComponents,
+│   │                         #   AIPredictions, WeatherApp
+│   ├── effects/
+│   │   ├── weather-2d.js     # canvas 2D efekty (~800r)
+│   │   ├── weather-3d.js     # Three.js 3D sceny (~1340r)
+│   │   └── sounds.js         # Web Audio synteza (~1290r)
+│   └── modules/
+│       └── moon.js           # canvas mesic s kratery (~345r)
+└── assets/
+    └── favicon/              # SVG + ICO + PNG (16-512px)
+```
 
-1. Forkněte repozitář
-2. Vytvořte svou feature branch (`git checkout -b feature/ÚžasnáFunkce`)
-3. Commitněte změny (`git commit -m 'Přidat úžasnou funkci'`)
-4. Pushněte do branch (`git push origin feature/ÚžasnáFunkce`)
-5. Otevřete Pull Request
+## API vyuziti — 100%
 
-### Pokyny pro vývoj
-- Držte se vanilla JS (žádné frameworky)
-- Udržujte mobile-first přístup
-- Testujte na více zařízeních
-- Komentujte složitou logiku
-- Dodržujte existující styl kódu
+Vsechna data z OpenWeatherMap API jsou zobrazena:
 
-## 📋 Roadmapa
+| Endpoint | Pole | Kde |
+|----------|------|-----|
+| Current | temp, feels_like, humidity, pressure, wind.speed/deg/gust, clouds, visibility, weather.id | Karta mesta |
+| Current | sea_level, grnd_level | Tooltip na tlaku + ikona hory |
+| Current | sunrise, sunset | Sun info sekce |
+| Forecast | temp, feels_like, wind.speed/deg, pressure, humidity, clouds, weather.id, pop, rain, snow, gust | Forecast karty |
+| Forecast | sys.pod | Den/noc ratio (internal) |
+| Air Pollution | aqi, pm2_5, pm10, o3, no2, no, nh3, so2, co | AQI sekce v modalu |
 
-- [ ] PWA offline podpora
-- [ ] Upozornění na počasí
-- [ ] Historická data počasí
-- [ ] Integrace mapy počasí
-- [ ] Funkce sdílení na sociální sítě
-- [ ] Podpora více jazyků
-- [ ] Přepínač tmavého/světlého tématu
-- [ ] Widgety počasí
-- [ ] Řešení API rate limitů
-- [ ] Ukládání uživatelských preferencí
+## Prednastavena mesta
 
-## 🐞 Známé problémy
+- Praha, New York, Tokyo, Sydney, London, Paris
 
-- Zvuk nemusí fungovat na iOS bez interakce uživatele
-- 3D efekty jsou vypnuté na slabších zařízeních
-- Některé efekty počasí mohou ovlivnit výkon na starších telefonech
+## Debug
 
-## 📄 Licence
+```
+http://localhost:8000?debug=true
+```
 
-Tento projekt je licencován pod MIT licencí - viz soubor [LICENSE](LICENSE) pro detaily.
+Konzolove prikazy:
+```javascript
+debug.clearCache()
+debug.showState()
+debug.toggleAnimations()
+debug.addRandomCity()
+debug.exportData()
+debug.testEffects()
+```
 
-## 🙏 Poděkování
+## Licence
 
-- Data počasí poskytuje [OpenWeatherMap](https://openweathermap.org/)
-- 3D grafika poháněná [Three.js](https://threejs.org/)
-- Inspirováno moderními aplikacemi počasí a kreativními webovými zážitky
-- Díky všem přispěvatelům!
+MIT
 
-## 📧 Kontakt
+## Autor
 
-Máte otázky nebo návrhy? Otevřete issue nebo mě kontaktujte!
-michalbugy12@gmail.com
+Michal Burgermeister — michalbugy12@gmail.com
 
 ---
 
-Vytvořeno s ❤️ v České republice
+Vytvoreno s srdcem v Ceske republice

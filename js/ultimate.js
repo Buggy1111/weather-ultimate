@@ -668,8 +668,9 @@ class ParticleSystem {
 class UIComponents {
     static weatherCard(city, data, forecast = null, airPollution = null) {
         const weather = data.weather[0].main.toLowerCase();
+        const weatherId = data.weather[0].id;
         const mood = CONFIG.WEATHER_MOODS[weather] || CONFIG.WEATHER_MOODS['clear'];
-        const emoji = this.getWeatherEmoji(weather);
+        const emoji = this.getWeatherEmoji(weather, weatherId);
         
         // Translate weather descriptions to Czech
         const czechDescription = this.translateWeatherToCzech(data.weather[0].description);
@@ -732,6 +733,8 @@ class UIComponents {
 
         // Pressure, visibility, clouds
         const pressure = data.main?.pressure;
+        const seaLevel = data.main?.sea_level;
+        const grndLevel = data.main?.grnd_level;
         const visibility = data.visibility;
         const cloudiness = data.clouds?.all;
 
@@ -772,7 +775,7 @@ class UIComponents {
                         ${hourlyData.map(hour => {
                             const hourTime = new Date(hour.dt * 1000 + timezoneOffset * 1000);
                             const hourStr = hourTime.toISOString().substring(11, 16);
-                            const hourEmoji = this.getWeatherEmoji(hour.weather[0].main.toLowerCase());
+                            const hourEmoji = this.getWeatherEmoji(hour.weather[0].main.toLowerCase(), hour.weather[0].id);
                             return `
                                 <div class="hourly-item">
                                     <div class="hourly-item__time">${hourStr}</div>
@@ -861,10 +864,10 @@ class UIComponents {
                         </div>
                         <div class="detail__label">${windDir ? `km/h ${windDir}` : 'km/h'}</div>
                     </div>
-                    <div class="detail">
+                    <div class="detail group" ${seaLevel && grndLevel ? `title="Hladina moře: ${seaLevel} hPa\nÚroveň terénu: ${grndLevel} hPa"` : ''}>
                         <div class="detail__icon">🔻</div>
                         <div class="detail__value">${pressure || '—'}</div>
-                        <div class="detail__label">hPa</div>
+                        <div class="detail__label">hPa${seaLevel && grndLevel && Math.abs(seaLevel - grndLevel) > 5 ? ` <small>⛰️${grndLevel}</small>` : ''}</div>
                     </div>
                     <div class="detail">
                         <div class="detail__icon">👁️</div>
@@ -1050,7 +1053,9 @@ class UIComponents {
             o3:    { good: 60, fair: 100, mod: 140, poor: 180, unit: 'μg/m³' },
             no2:   { good: 40, fair: 70, mod: 150, poor: 200, unit: 'μg/m³' },
             so2:   { good: 20, fair: 80, mod: 250, poor: 350, unit: 'μg/m³' },
-            co:    { good: 4400, fair: 9400, mod: 12400, poor: 15400, unit: 'μg/m³' }
+            co:    { good: 4400, fair: 9400, mod: 12400, poor: 15400, unit: 'μg/m³' },
+            no:    { good: 50, fair: 100, mod: 200, poor: 400, unit: 'μg/m³' },
+            nh3:   { good: 200, fair: 400, mod: 800, poor: 1200, unit: 'μg/m³' }
         };
         const info = limits[name];
         if (!info) return { value: value.toFixed(1), unit: 'μg/m³', level: 'unknown' };
@@ -1061,7 +1066,29 @@ class UIComponents {
         return { value: value.toFixed(1), unit: info.unit, level };
     }
 
-    static getWeatherEmoji(weather) {
+    static getWeatherEmoji(weather, weatherId = null) {
+        // Use precise weather.id codes if available
+        if (weatherId) {
+            if (weatherId >= 200 && weatherId < 210) return '⛈️';  // thunderstorm with rain
+            if (weatherId >= 210 && weatherId < 220) return '🌩️';  // lightning
+            if (weatherId >= 220 && weatherId < 300) return '⛈️';  // heavy thunderstorm
+            if (weatherId >= 300 && weatherId < 320) return '🌦️';  // drizzle
+            if (weatherId === 500) return '🌦️';  // light rain
+            if (weatherId === 501) return '🌧️';  // moderate rain
+            if (weatherId >= 502 && weatherId <= 504) return '🌧️'; // heavy rain
+            if (weatherId === 511) return '🧊';  // freezing rain
+            if (weatherId >= 520 && weatherId < 600) return '🌧️';  // shower rain
+            if (weatherId === 600) return '🌨️';  // light snow
+            if (weatherId === 601) return '❄️';   // snow
+            if (weatherId >= 602) return '🌨️';   // heavy snow / sleet
+            if (weatherId >= 700 && weatherId < 800) return '🌫️';  // atmosphere (mist/fog/haze)
+            if (weatherId === 800) return '☀️';   // clear sky
+            if (weatherId === 801) return '🌤️';   // few clouds
+            if (weatherId === 802) return '⛅';    // scattered clouds
+            if (weatherId === 803) return '🌥️';   // broken clouds
+            if (weatherId === 804) return '☁️';   // overcast
+        }
+        // Fallback to generic weather type
         const emojis = {
             'clear': '☀️',
             'clouds': '☁️',
@@ -1421,9 +1448,12 @@ class WeatherUltimate {
                 days.set(dayKey, {
                     date: date,
                     temps: [],
+                    feelsLike: [],
                     weather: [],
+                    weatherIds: [],
                     humidity: [],
                     wind: [],
+                    windDeg: [],
                     pressure: [],
                     clouds: [],
                     visibility: [],
@@ -1431,15 +1461,19 @@ class WeatherUltimate {
                     snow: 0,
                     maxGust: 0,
                     pop: [],
+                    pods: [],
                     items: []
                 });
             }
 
             const day = days.get(dayKey);
             day.temps.push(item.main.temp);
+            if (item.main.feels_like != null) day.feelsLike.push(item.main.feels_like);
             day.weather.push(item.weather[0]);
+            if (item.weather[0]?.id) day.weatherIds.push(item.weather[0].id);
             day.humidity.push(item.main.humidity);
             day.wind.push(item.wind.speed);
+            if (item.wind?.deg != null) day.windDeg.push(item.wind.deg);
             day.pressure.push(item.main.pressure);
             if (item.clouds?.all != null) day.clouds.push(item.clouds.all);
             if (item.visibility != null) day.visibility.push(item.visibility);
@@ -1447,6 +1481,7 @@ class WeatherUltimate {
             if (item.snow?.['3h']) day.snow += item.snow['3h'];
             if (item.wind?.gust > day.maxGust) day.maxGust = item.wind.gust;
             if (item.pop != null) day.pop.push(item.pop);
+            if (item.sys?.pod) day.pods.push(item.sys.pod);
             day.items.push(item);
         });
         
@@ -1472,6 +1507,29 @@ class WeatherUltimate {
             const avgClouds = day.clouds.length ? day.clouds.reduce((a, b) => a + b, 0) / day.clouds.length : null;
             const minVisibility = day.visibility.length ? Math.min(...day.visibility) : null;
             const maxPop = day.pop.length ? Math.max(...day.pop) : 0;
+            const avgFeelsLike = day.feelsLike.length ? day.feelsLike.reduce((a, b) => a + b, 0) / day.feelsLike.length : null;
+
+            // Dominant wind direction (vector average of degrees)
+            let dominantWindDeg = null;
+            let windDirLabel = null;
+            if (day.windDeg.length > 0) {
+                const sinSum = day.windDeg.reduce((s, d) => s + Math.sin(d * Math.PI / 180), 0);
+                const cosSum = day.windDeg.reduce((s, d) => s + Math.cos(d * Math.PI / 180), 0);
+                dominantWindDeg = Math.round(((Math.atan2(sinSum, cosSum) * 180 / Math.PI) + 360) % 360);
+                const dirs = ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'];
+                windDirLabel = dirs[Math.round(dominantWindDeg / 22.5) % 16];
+            }
+
+            // Dominant weather ID
+            const weatherIdCounts = {};
+            day.weatherIds.forEach(id => { weatherIdCounts[id] = (weatherIdCounts[id] || 0) + 1; });
+            const dominantWeatherId = Object.keys(weatherIdCounts).length
+                ? Number(Object.entries(weatherIdCounts).sort((a, b) => b[1] - a[1])[0][0])
+                : null;
+
+            // Day/night ratio from sys.pod ('d' = day, 'n' = night)
+            const dayPods = day.pods.filter(p => p === 'd').length;
+            const nightPods = day.pods.filter(p => p === 'n').length;
 
             dailyData.push({
                 date: day.date,
@@ -1479,6 +1537,7 @@ class WeatherUltimate {
                 avgTemp: Math.round(avgTemp),
                 minTemp: Math.round(minTemp),
                 maxTemp: Math.round(maxTemp),
+                avgFeelsLike: avgFeelsLike != null ? Math.round(avgFeelsLike) : null,
                 avgHumidity: Math.round(avgHumidity),
                 avgWind: Math.round(avgWind * 3.6),
                 avgPressure: avgPressure ? Math.round(avgPressure) : null,
@@ -1489,6 +1548,11 @@ class WeatherUltimate {
                 maxGust: day.maxGust ? Math.round(day.maxGust * 3.6) : 0,
                 maxPop: Math.round(maxPop * 100),
                 weather: weatherInfo,
+                weatherId: dominantWeatherId,
+                windDeg: dominantWindDeg,
+                windDir: windDirLabel,
+                dayHours: dayPods,
+                nightHours: nightPods,
                 hourly: day.items
             });
         });
@@ -1516,6 +1580,8 @@ class WeatherUltimate {
                 { key: 'pm10', label: 'PM10', val: c.pm10 },
                 { key: 'o3', label: 'O₃', val: c.o3 },
                 { key: 'no2', label: 'NO₂', val: c.no2 },
+                { key: 'no', label: 'NO', val: c.no },
+                { key: 'nh3', label: 'NH₃', val: c.nh3 },
                 { key: 'so2', label: 'SO₂', val: c.so2 },
                 { key: 'co', label: 'CO', val: c.co }
             ];
@@ -1600,33 +1666,41 @@ class WeatherUltimate {
     createDayForecast(day) {
         const dayName = day.date.toLocaleDateString('cs-CZ', { weekday: 'long' });
         const dateStr = day.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
-        const emoji = UIComponents.getWeatherEmoji(day.weather.main.toLowerCase());
+        const emoji = UIComponents.getWeatherEmoji(day.weather.main.toLowerCase(), day.weatherId);
         const czechDescription = UIComponents.translateWeatherToCzech(day.weather.description);
-        
+
+        // Feels like differs significantly from actual temp?
+        const feelsLikeDiff = day.avgFeelsLike != null ? day.avgFeelsLike - day.avgTemp : 0;
+        const showFeelsLike = day.avgFeelsLike != null && Math.abs(feelsLikeDiff) >= 2;
+
         return `
             <div class="forecast-day-card">
                 <div class="forecast-day-card__header">
                     <h3>${dayName}</h3>
                     <p>${dateStr}</p>
                 </div>
-                
+
                 <div class="forecast-day-card__icon">${emoji}</div>
-                
+
                 <div class="forecast-day-card__temps">
                     <span class="temp-max">${day.maxTemp}°</span>
                     <span class="temp-min">${day.minTemp}°</span>
                 </div>
-                
+
                 <p class="forecast-day-card__desc">${czechDescription}</p>
-                
+
                 <div class="forecast-day-card__metrics">
+                    ${showFeelsLike ? `<div class="fc-metric fc-metric--feels">
+                        <span class="fc-metric__icon">🌡️</span>
+                        <span class="fc-metric__val">${day.avgFeelsLike}° <small>pocit</small></span>
+                    </div>` : ''}
                     <div class="fc-metric">
                         <span class="fc-metric__icon">💧</span>
                         <span class="fc-metric__val">${day.avgHumidity}%</span>
                     </div>
                     <div class="fc-metric">
                         <span class="fc-metric__icon">💨</span>
-                        <span class="fc-metric__val">${day.avgWind} <small>km/h</small></span>
+                        <span class="fc-metric__val">${day.avgWind}${day.windDir ? ` ${day.windDir}` : ''} <small>km/h</small></span>
                     </div>
                     ${day.avgPressure ? `<div class="fc-metric">
                         <span class="fc-metric__icon">◉</span>
