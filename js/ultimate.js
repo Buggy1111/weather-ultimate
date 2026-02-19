@@ -452,6 +452,132 @@ class AIPredictions {
 
         return [...alerts, ...warnings, ...analyses];
     }
+
+    generateCityPrediction(cityName, dailyForecasts, airPollution = null) {
+        if (!dailyForecasts || dailyForecasts.length < 2) return [];
+
+        const insights = [];
+        const r = v => Math.round(v);
+        const days = dailyForecasts;
+        const n = days.length;
+
+        // Day names for Czech
+        const dayNames = d => d.date.toLocaleDateString('cs-CZ', { weekday: 'long' });
+
+        // === TEMPERATURE TREND ===
+        const firstHalf = days.slice(0, Math.ceil(n / 2));
+        const secondHalf = days.slice(Math.ceil(n / 2));
+        const avgFirst = firstHalf.reduce((s, d) => s + d.avgTemp, 0) / firstHalf.length;
+        const avgSecond = secondHalf.reduce((s, d) => s + d.avgTemp, 0) / secondHalf.length;
+        const tempDiff = avgSecond - avgFirst;
+
+        if (tempDiff > 5) {
+            insights.push(`📈 Výrazné oteplování: z průměru ${r(avgFirst)}°C na ${r(avgSecond)}°C — nárůst o ${r(tempDiff)}°C během týdne.`);
+        } else if (tempDiff > 2) {
+            insights.push(`📈 Postupné oteplování o ${r(tempDiff)}°C — ke konci týdne příjemnější teploty.`);
+        } else if (tempDiff < -5) {
+            insights.push(`📉 Výrazné ochlazení: z ${r(avgFirst)}°C na ${r(avgSecond)}°C — pokles o ${r(Math.abs(tempDiff))}°C.`);
+        } else if (tempDiff < -2) {
+            insights.push(`📉 Postupné ochlazování o ${r(Math.abs(tempDiff))}°C — ke konci týdne chladněji.`);
+        } else {
+            insights.push(`🌡️ Stabilní teploty kolem ${r((avgFirst + avgSecond) / 2)}°C — bez výraznějších výkyvů.`);
+        }
+
+        // === EXTREMES ===
+        const warmest = days.reduce((a, b) => a.maxTemp > b.maxTemp ? a : b);
+        const coldest = days.reduce((a, b) => a.minTemp < b.minTemp ? a : b);
+        if (warmest.maxTemp - coldest.minTemp > 10) {
+            insights.push(`🔥 Nejteplejší den: ${dayNames(warmest)} (${warmest.maxTemp}°C) | 🥶 Nejchladnější: ${dayNames(coldest)} (${coldest.minTemp}°C).`);
+        }
+
+        // === PRECIPITATION ===
+        const rainyDays = days.filter(d => d.rainTotal > 0 || d.maxPop > 60);
+        const snowyDays = days.filter(d => d.snowTotal > 0);
+        const totalRain = days.reduce((s, d) => s + d.rainTotal, 0);
+        const totalSnow = days.reduce((s, d) => s + d.snowTotal, 0);
+
+        if (rainyDays.length === 0 && snowyDays.length === 0) {
+            insights.push(`☀️ Suchý týden — žádné srážky v předpovědi. Ideální pro venkovní aktivity.`);
+        } else if (rainyDays.length >= n - 1) {
+            insights.push(`🌧️ Déšť téměř celý týden (${rainyDays.length}/${n} dní, celkem ${r(totalRain)} mm). Nezapomeňte deštník!`);
+        } else if (rainyDays.length > 0) {
+            const rainDayNames = rainyDays.slice(0, 3).map(d => dayNames(d)).join(', ');
+            insights.push(`🌧️ Déšť očekáván: ${rainDayNames} (celkem ${r(totalRain)} mm za ${rainyDays.length} dní).`);
+        }
+        if (totalSnow > 0) {
+            const snowDayNames = snowyDays.slice(0, 3).map(d => dayNames(d)).join(', ');
+            insights.push(`❄️ Sněžení: ${snowDayNames} — celkem ${r(totalSnow)} cm nového sněhu.`);
+        }
+
+        // === WIND ===
+        const windiest = days.reduce((a, b) => a.avgWind > b.avgWind ? a : b);
+        const maxGustAll = Math.max(...days.map(d => d.maxGust));
+        if (maxGustAll > 60) {
+            insights.push(`💨 Silný vítr — nárazy až ${r(maxGustAll)} km/h (${dayNames(windiest)}). Pozor na komplikace v dopravě.`);
+        } else if (windiest.avgWind > 30) {
+            insights.push(`🌬️ Největrnější den: ${dayNames(windiest)} (${windiest.avgWind} km/h, nárazy ${windiest.maxGust} km/h).`);
+        }
+
+        // === PRESSURE TREND ===
+        const pressures = days.filter(d => d.avgPressure).map(d => d.avgPressure);
+        if (pressures.length >= 3) {
+            const pFirst = pressures.slice(0, 2).reduce((a, b) => a + b, 0) / 2;
+            const pLast = pressures.slice(-2).reduce((a, b) => a + b, 0) / 2;
+            const pDiff = pLast - pFirst;
+            if (pDiff < -5) {
+                insights.push(`📉 Klesající tlak (${r(pFirst)} → ${r(pLast)} hPa) — příchod frontálního systému, zhoršení počasí.`);
+            } else if (pDiff > 5) {
+                insights.push(`📈 Rostoucí tlak (${r(pFirst)} → ${r(pLast)} hPa) — tlaková výše přinese stabilní počasí.`);
+            }
+        }
+
+        // === WEEKEND FORECAST ===
+        const weekend = days.filter(d => {
+            const dow = d.date.getDay();
+            return dow === 0 || dow === 6;
+        });
+        if (weekend.length > 0) {
+            const wkRain = weekend.some(d => d.rainTotal > 0 || d.maxPop > 60);
+            const wkAvg = r(weekend.reduce((s, d) => s + d.avgTemp, 0) / weekend.length);
+            const wkCond = wkRain ? 'se srážkami' : 'bez srážek';
+            insights.push(`📅 Víkend: průměr ${wkAvg}°C, ${wkCond}. ${wkRain ? 'Plánujte indoor aktivity.' : 'Vhodné pro výlety!'}`);
+        }
+
+        // === TODAY vs TOMORROW ===
+        if (days.length >= 2) {
+            const today = days[0];
+            const tomorrow = days[1];
+            const tDiff = tomorrow.maxTemp - today.maxTemp;
+            if (Math.abs(tDiff) >= 3) {
+                const dir = tDiff > 0 ? 'tepleji' : 'chladněji';
+                insights.push(`🔄 Zítra (${dayNames(tomorrow)}) bude o ${r(Math.abs(tDiff))}°C ${dir} než dnes (${today.maxTemp}°C → ${tomorrow.maxTemp}°C).`);
+            }
+        }
+
+        // === HUMIDITY & FOG RISK ===
+        const humidDays = days.filter(d => d.avgHumidity > 85 && d.minTemp < 5);
+        if (humidDays.length > 0) {
+            insights.push(`🌫️ Riziko mlh: ${humidDays.map(d => dayNames(d)).slice(0, 3).join(', ')} (vlhkost >85% + nízké teploty).`);
+        }
+
+        // === AIR QUALITY ===
+        if (airPollution?.list?.[0]) {
+            const aqi = airPollution.list[0].main.aqi;
+            const c = airPollution.list[0].components;
+            if (aqi >= 4) {
+                insights.push(`⚠️ Špatná kvalita vzduchu (AQI ${aqi}/5) — omezte venkovní sport, zvažte respirátor.`);
+            } else if (aqi <= 1 && c.pm2_5 < 10) {
+                insights.push(`🌿 Výborná kvalita vzduchu (PM2.5: ${r(c.pm2_5)} µg/m³) — ideální pro běh a outdoor aktivity.`);
+            }
+        }
+
+        // === OVERALL SUMMARY ===
+        const avgWeekTemp = r(days.reduce((s, d) => s + d.avgTemp, 0) / n);
+        const dryDays = n - rainyDays.length - snowyDays.length;
+        insights.push(`📊 Týdenní souhrn: průměr ${avgWeekTemp}°C, ${dryDays} suchých dní, ${rainyDays.length + snowyDays.length} se srážkami.`);
+
+        return insights;
+    }
 }
 
 // Particle System
@@ -1418,12 +1544,25 @@ class WeatherUltimate {
             `;
         }
 
+        // Generate AI city insights
+        const cityInsights = this.aiEngine.generateCityPrediction(cityName, dailyForecasts, airPollution);
+        const aiSectionHTML = cityInsights.length > 0 ? `
+                    <div class="ai-city-insight">
+                        <h3 class="ai-city-insight__title">🤖 AI Analýza — ${cityName}</h3>
+                        <div class="ai-city-insight__list">
+                            ${cityInsights.map(i => `<div class="ai-city-insight__item">${i}</div>`).join('')}
+                        </div>
+                    </div>
+        ` : '';
+
         // Create modal HTML
         const modalHTML = `
             <div id="forecast-modal" class="forecast-modal">
                 <div class="forecast-modal__content">
                     <button class="forecast-modal__close" onclick="window.weatherApp.closeForecastModal()">&times;</button>
                     <h2 class="forecast-modal__title">📅 7-denní předpověď pro ${cityName}</h2>
+
+                    ${aiSectionHTML}
 
                     <div class="forecast-days">
                         ${dailyForecasts.map(day => this.createDayForecast(day)).join('')}
