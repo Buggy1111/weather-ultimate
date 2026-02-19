@@ -10,22 +10,32 @@ class WeatherCardEffects {
         this.particlePool = [];
         this.maxParticles = 100;
         this.initialized = false;
+        // Skip heavy effects on touch devices (performance + scroll fix)
+        this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         this.init();
     }
 
     init() {
+        // On touch devices, skip all particle effects to prevent scroll issues
+        if (this.isTouchDevice) {
+            this.initialized = true;
+            this.connectToWeatherApp();
+            console.log('🌦️ Weather Effects: touch device detected, effects disabled');
+            return;
+        }
+
         // Create effects container
         this.createEffectsContainer();
-        
+
         // Initialize particle pool
         this.initializeParticlePool();
-        
+
         // Setup resize handler
         window.addEventListener('resize', () => this.handleResize());
-        
+
         // Connect to main app
         this.connectToWeatherApp();
-        
+
         this.initialized = true;
         console.log('🌦️ Weather Effects initialized');
     }
@@ -292,6 +302,9 @@ class WeatherCardEffects {
     }
 
     createCardEffect(card, weatherType) {
+        // Skip on touch devices
+        if (this.isTouchDevice) return;
+
         // Remove existing effects
         this.removeCardEffect(card);
 

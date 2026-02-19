@@ -143,15 +143,39 @@
 /* Performance Optimizations */
 @media (max-width: 768px) {
     #particle-canvas { opacity: 0.3; }
-    .weather-card:hover { transform: translateY(-4px); }
+    .weather-card:hover { transform: none !important; }
     .weather-3d-container { opacity: 0.5; }
 }
 
 /* Touch Device Optimizations */
 @media (hover: none) and (pointer: coarse) {
-    .weather-card:hover { transform: none; }
-    .weather-card { cursor: default; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .weather-card:hover { transform: none !important; }
+    .weather-card,
+    .weather-card.rain-effect {
+        cursor: default;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transform-style: flat !important;
+        perspective: none !important;
+        will-change: auto !important;
+        overflow: visible !important;
+    }
+    .weather-card::before { display: none; }
+    .weather-card.rain-effect::before { display: none; }
     .hourly-forecast__scroll { -webkit-overflow-scrolling: touch; touch-action: pan-x; overflow-x: scroll; }
     .forecast-button { padding: 1rem 1.25rem; font-size: var(--fs-base); cursor: pointer; touch-action: manipulation; }
     .search-button { padding: 1.25rem 1.75rem; }
+}
+
+/* Fallback for browsers without hover media query */
+@media (max-width: 767px) {
+    .weather-card,
+    .weather-card.rain-effect {
+        transform-style: flat !important;
+        perspective: none !important;
+        overflow: visible !important;
+    }
+    .weather-card:hover { transform: none !important; }
+    .weather-card::before { display: none; }
+    .weather-card.rain-effect::before { display: none; }
 }
