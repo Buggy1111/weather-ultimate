@@ -28,7 +28,7 @@
     border: 1px solid var(--glass-border);
     border-radius: clamp(16px, 2vw, 24px);
     padding: clamp(1rem, 2vw, 2rem);
-    max-width: 900px;
+    max-width: 1100px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -77,8 +77,8 @@
 /* Forecast Days Grid */
 .forecast-days {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
     margin-bottom: 2rem;
 }
 
@@ -106,27 +106,27 @@
 .forecast-day-card__desc { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.8); margin-bottom: 0.75rem; text-transform: capitalize; }
 /* Forecast Metrics Grid */
 .forecast-day-card__metrics {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.3rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.2rem;
+    margin-top: 0.25rem;
 }
 
 .fc-metric {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.2rem 0.35rem;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.04);
-    font-size: 0.7rem;
+    gap: 0.2rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 0.65rem;
     color: rgba(255, 255, 255, 0.7);
-    transition: background 0.2s;
+    line-height: 1.2;
 }
 
-.fc-metric:hover { background: rgba(255, 255, 255, 0.08); }
-
 .fc-metric__icon {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     flex-shrink: 0;
     line-height: 1;
 }
@@ -139,8 +139,9 @@
 
 .fc-metric__val small {
     font-weight: 400;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: rgba(255, 255, 255, 0.45);
+    margin-left: 0.1rem;
 }
 
 .fc-metric--rain .fc-metric__val { color: #60a5fa; }
