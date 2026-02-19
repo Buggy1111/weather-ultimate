@@ -491,7 +491,22 @@ class WeatherCardEffects {
     }
 
     createClearEffect(card, rect, effectInfo) {
-        // Create sun rays
+        const isNight = card.classList.contains('weather-card--night');
+        const isTwilight = card.classList.contains('weather-card--twilight');
+
+        if (isNight) {
+            // Night: cool moonlight glow, no sun rays
+            card.style.boxShadow = '0 0 30px rgba(100, 130, 200, 0.15)';
+            return;
+        }
+
+        if (isTwilight) {
+            // Twilight: warm-to-cool gradient glow
+            card.style.boxShadow = '0 0 25px rgba(200, 120, 80, 0.15)';
+            return;
+        }
+
+        // Day: sun rays
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
 
@@ -500,7 +515,7 @@ class WeatherCardEffects {
             ray.className = 'sunray';
             const angle = (i * 45) * Math.PI / 180;
             const length = Math.max(rect.width, rect.height);
-            
+
             ray.style.cssText = `
                 left: ${centerX}px;
                 top: ${centerY - length / 2}px;
@@ -509,7 +524,7 @@ class WeatherCardEffects {
                 animation-delay: ${i * 0.2}s;
                 opacity: ${0.1 + Math.random() * 0.1};
             `;
-            
+
             this.container.appendChild(ray);
             effectInfo.particles.push(ray);
         }

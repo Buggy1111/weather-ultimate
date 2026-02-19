@@ -104,14 +104,48 @@
 .temp-max { color: #ff6b6b; }
 .temp-min { color: #4ecdc4; }
 .forecast-day-card__desc { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.8); margin-bottom: 0.75rem; text-transform: capitalize; }
-.forecast-day-card__details {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.25rem 0.5rem;
-    font-size: var(--fs-xs);
-    color: rgba(255, 255, 255, 0.6);
+/* Forecast Metrics Grid */
+.forecast-day-card__metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem;
 }
+
+.fc-metric {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.35rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    transition: background 0.2s;
+}
+
+.fc-metric:hover { background: rgba(255, 255, 255, 0.08); }
+
+.fc-metric__icon {
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.fc-metric__val {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+}
+
+.fc-metric__val small {
+    font-weight: 400;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.fc-metric--rain .fc-metric__val { color: #60a5fa; }
+.fc-metric--snow .fc-metric__val { color: #93c5fd; }
+.fc-metric--wind .fc-metric__val { color: #fbbf24; }
 
 /* Temperature Chart */
 .forecast-chart {

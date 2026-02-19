@@ -1297,8 +1297,9 @@ class WeatherUltimate {
         
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         
-        // Show modal with animation
+        // Show modal with animation + lock scroll
         const modal = document.getElementById('forecast-modal');
+        document.body.style.overflow = 'hidden';
         requestAnimationFrame(() => {
             modal.classList.add('forecast-modal--show');
         });
@@ -1336,15 +1337,39 @@ class WeatherUltimate {
                 
                 <p class="forecast-day-card__desc">${czechDescription}</p>
                 
-                <div class="forecast-day-card__details">
-                    <div>💧 ${day.avgHumidity}%</div>
-                    <div>💨 ${day.avgWind} km/h</div>
-                    ${day.avgPressure ? `<div>🔻 ${day.avgPressure} hPa</div>` : ''}
-                    ${day.avgClouds != null ? `<div>☁️ ${day.avgClouds}%</div>` : ''}
-                    ${day.rainTotal > 0 ? `<div>🌧️ ${day.rainTotal} mm</div>` : ''}
-                    ${day.snowTotal > 0 ? `<div>🌨️ ${day.snowTotal} mm</div>` : ''}
-                    ${day.maxGust > 0 ? `<div>💨 Nárazy ${day.maxGust}</div>` : ''}
-                    ${day.maxPop > 0 ? `<div>☔ ${day.maxPop}%</div>` : ''}
+                <div class="forecast-day-card__metrics">
+                    <div class="fc-metric">
+                        <span class="fc-metric__icon">💧</span>
+                        <span class="fc-metric__val">${day.avgHumidity}%</span>
+                    </div>
+                    <div class="fc-metric">
+                        <span class="fc-metric__icon">💨</span>
+                        <span class="fc-metric__val">${day.avgWind} <small>km/h</small></span>
+                    </div>
+                    ${day.avgPressure ? `<div class="fc-metric">
+                        <span class="fc-metric__icon">◉</span>
+                        <span class="fc-metric__val">${day.avgPressure} <small>hPa</small></span>
+                    </div>` : ''}
+                    ${day.avgClouds != null ? `<div class="fc-metric">
+                        <span class="fc-metric__icon">☁️</span>
+                        <span class="fc-metric__val">${day.avgClouds}%</span>
+                    </div>` : ''}
+                    ${day.maxPop > 0 ? `<div class="fc-metric fc-metric--rain">
+                        <span class="fc-metric__icon">☔</span>
+                        <span class="fc-metric__val">${day.maxPop}%</span>
+                    </div>` : ''}
+                    ${day.rainTotal > 0 ? `<div class="fc-metric fc-metric--rain">
+                        <span class="fc-metric__icon">🌧️</span>
+                        <span class="fc-metric__val">${day.rainTotal} <small>mm</small></span>
+                    </div>` : ''}
+                    ${day.snowTotal > 0 ? `<div class="fc-metric fc-metric--snow">
+                        <span class="fc-metric__icon">🌨️</span>
+                        <span class="fc-metric__val">${day.snowTotal} <small>mm</small></span>
+                    </div>` : ''}
+                    ${day.maxGust > 0 ? `<div class="fc-metric fc-metric--wind">
+                        <span class="fc-metric__icon">⚡</span>
+                        <span class="fc-metric__val">${day.maxGust} <small>km/h</small></span>
+                    </div>` : ''}
                 </div>
             </div>
         `;
@@ -1467,6 +1492,7 @@ class WeatherUltimate {
         const modal = document.getElementById('forecast-modal');
         if (modal) {
             modal.classList.remove('forecast-modal--show');
+            document.body.style.overflow = '';
             setTimeout(() => modal.remove(), 300);
         }
     }

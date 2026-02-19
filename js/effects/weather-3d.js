@@ -22,9 +22,9 @@ function detectPerformanceTier() {
 const PERF_TIER = detectPerformanceTier();
 
 const PARTICLE_COUNTS = {
-    high:   { rain: 3000, snow: 4000, drizzle: 1500, sunDust: 200 },
-    medium: { rain: 1500, snow: 2000, drizzle: 800,  sunDust: 100 },
-    low:    { rain: 500,  snow: 600,  drizzle: 300,  sunDust: 50  }
+    high:   { rain: 3000, snow: 4000, drizzle: 1500, sunDust: 200, stars: 300 },
+    medium: { rain: 1500, snow: 2000, drizzle: 800,  sunDust: 100, stars: 150 },
+    low:    { rain: 500,  snow: 600,  drizzle: 300,  sunDust: 50,  stars: 60  }
 };
 
 const COUNTS = PARTICLE_COUNTS[PERF_TIER];
@@ -219,8 +219,15 @@ class Weather3DEffects {
         scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
         const weather = weatherType.toLowerCase();
+        const isNight = card.classList.contains('weather-card--night');
+        const isTwilight = card.classList.contains('weather-card--twilight');
+
         switch (weather) {
-            case 'clear':       this.createSunEffect(scene, cardId); break;
+            case 'clear':
+                if (isNight) this.createNightClearEffect(scene, cardId);
+                else if (isTwilight) this.createTwilightClearEffect(scene, cardId);
+                else this.createSunEffect(scene, cardId);
+                break;
             case 'clouds':      this.createCloudsEffect(scene, cardId); break;
             case 'rain':        this.createRainEffect(scene, cardId); break;
             case 'thunderstorm': this.createThunderstormEffect(scene, cardId); break;
@@ -384,6 +391,230 @@ class Weather3DEffects {
                 r.material.opacity = r.userData.baseOpacity *
                     (0.6 + Math.sin(time * r.userData.speed + r.userData.phase) * 0.4);
             });
+        });
+    }
+
+    // ───────────────────────────────────────────────────────────
+    // 🌙  NIGHT CLEAR — Moonlight glow + twinkling stars
+    // ───────────────────────────────────────────────────────────
+    createNightClearEffect(scene, cardId) {
+        // 1. Moonlight source — cool silver sphere
+        const moonPos = new THREE.Vector3(10, 10, -5);
+        const moonGeo = new THREE.SphereGeometry(2.8, 32, 32);
+        const moonMat = new THREE.ShaderMaterial({
+            uniforms: { uTime: { value: 0 } },
+            vertexShader: `
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                void main(){
+                    vUv = uv;
+                    vNormal = normalize(normalMatrix * normal);
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+                }`,
+            fragmentShader: GLSL_NOISE + `
+                uniform float uTime;
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                void main(){
+                    float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0,0,1))), 2.0);
+                    float n = snoise(vec3(vUv * 6.0, uTime * 0.1)) * 0.08;
+                    float brightness = 0.85 + n + fresnel * 0.15;
+                    vec3 core = mix(vec3(0.85, 0.88, 0.95), vec3(0.6, 0.65, 0.8), fresnel + n);
+                    gl_FragColor = vec4(core * brightness, 1.0);
+                }`,
+            transparent: false
+        });
+        const moon = new THREE.Mesh(moonGeo, moonMat);
+        moon.position.copy(moonPos);
+        scene.add(moon);
+
+        // 2. Soft moonlight glow halos
+        const glowLayers = [];
+        const sizes = [5, 8, 13, 18];
+        const opacities = [0.2, 0.12, 0.06, 0.03];
+        const colors = [0xaabbdd, 0x8899cc, 0x6677aa, 0x556699];
+        sizes.forEach((s, i) => {
+            const g = new THREE.SphereGeometry(s, 16, 16);
+            const m = new THREE.MeshBasicMaterial({
+                color: colors[i], transparent: true, opacity: opacities[i],
+                blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide
+            });
+            const mesh = new THREE.Mesh(g, m);
+            mesh.position.copy(moonPos);
+            scene.add(mesh);
+            glowLayers.push(mesh);
+        });
+
+        // 3. Twinkling stars
+        const starCount = COUNTS.stars;
+        const starGeo = this._createInstancedQuad(starCount);
+        const offsets = new Float32Array(starCount * 3);
+        const randoms = new Float32Array(starCount);
+        const starSizes = new Float32Array(starCount);
+        for (let i = 0; i < starCount; i++) {
+            offsets[i*3]   = (Math.random()-0.5) * 50;
+            offsets[i*3+1] = (Math.random()-0.5) * 35;
+            offsets[i*3+2] = -5 - Math.random() * 15;
+            randoms[i] = Math.random();
+            starSizes[i] = 0.08 + Math.random() * 0.2;
+        }
+        starGeo.setAttribute('aOffset', new THREE.InstancedBufferAttribute(offsets, 3));
+        starGeo.setAttribute('aRandom', new THREE.InstancedBufferAttribute(randoms, 1));
+        starGeo.setAttribute('aSize', new THREE.InstancedBufferAttribute(starSizes, 1));
+
+        const starMat = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0 },
+                uTex: { value: getSoftCircle() }
+            },
+            vertexShader: `
+                attribute vec3 aOffset;
+                attribute float aRandom;
+                attribute float aSize;
+                uniform float uTime;
+                varying float vAlpha;
+                varying vec2 vUv;
+                void main(){
+                    vUv = uv;
+                    vec3 iPos = aOffset;
+                    vec4 viewPos = modelViewMatrix * vec4(iPos, 1.0);
+                    viewPos.xy += position.xy * aSize;
+                    // Twinkling — different speeds per star
+                    float twinkle = sin(uTime * (2.0 + aRandom * 4.0) + aRandom * 6.28);
+                    twinkle = twinkle * 0.3 + 0.7;
+                    // Occasional bright flash
+                    float flash = pow(max(0.0, sin(uTime * (0.5 + aRandom * 2.0) + aRandom * 100.0)), 12.0);
+                    vAlpha = twinkle * (0.4 + aRandom * 0.6) + flash * 0.6;
+                    gl_Position = projectionMatrix * viewPos;
+                }`,
+            fragmentShader: `
+                uniform sampler2D uTex;
+                varying float vAlpha;
+                varying vec2 vUv;
+                void main(){
+                    float a = texture2D(uTex, vUv).r;
+                    vec3 col = mix(vec3(0.8, 0.85, 1.0), vec3(1.0, 0.95, 0.85), vAlpha * 0.3);
+                    gl_FragColor = vec4(col, a * vAlpha);
+                }`,
+            transparent: true, depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+        const starMesh = new THREE.Mesh(starGeo, starMat);
+        scene.add(starMesh);
+
+        // 4. Cool point light
+        const light = new THREE.PointLight(0x8899cc, 1.5, 60);
+        light.position.copy(moonPos);
+        scene.add(light);
+
+        // Animation
+        this.animations.set(cardId, (delta, time) => {
+            moonMat.uniforms.uTime.value = time;
+            starMat.uniforms.uTime.value = time;
+            moon.rotation.y += delta * 0.05;
+            glowLayers.forEach((g, i) => {
+                const s = 1.0 + Math.sin(time * (0.8 + i * 0.2)) * 0.04;
+                g.scale.set(s, s, s);
+                g.material.opacity = opacities[i] * (0.85 + Math.sin(time * 1.5 + i) * 0.15);
+            });
+        });
+    }
+
+    // ───────────────────────────────────────────────────────────
+    // 🌇  TWILIGHT CLEAR — Sunset/dusk glow + emerging stars
+    // ───────────────────────────────────────────────────────────
+    createTwilightClearEffect(scene, cardId) {
+        const sunPos = new THREE.Vector3(0, -2, -8);
+
+        // 1. Low horizon glow — orange/purple gradient
+        const glowGeo = new THREE.PlaneGeometry(60, 30, 1, 1);
+        const glowMat = new THREE.ShaderMaterial({
+            uniforms: { uTime: { value: 0 } },
+            vertexShader: `
+                varying vec2 vUv;
+                void main(){
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+                }`,
+            fragmentShader: GLSL_NOISE + `
+                uniform float uTime;
+                varying vec2 vUv;
+                void main(){
+                    float gradient = smoothstep(0.0, 0.6, vUv.y);
+                    float n = snoise(vec3(vUv * 2.0, uTime * 0.05)) * 0.08;
+                    vec3 horizonLow = vec3(0.9, 0.4, 0.15);
+                    vec3 horizonHigh = vec3(0.3, 0.15, 0.5);
+                    vec3 sky = vec3(0.05, 0.05, 0.15);
+                    vec3 col = mix(horizonLow, horizonHigh, gradient);
+                    col = mix(col, sky, smoothstep(0.3, 0.9, vUv.y));
+                    col += n;
+                    float edge = smoothstep(0.0, 0.15, vUv.x) * smoothstep(1.0, 0.85, vUv.x);
+                    float alpha = (1.0 - gradient * 0.7) * edge * 0.4;
+                    gl_FragColor = vec4(col, alpha);
+                }`,
+            transparent: true, depthWrite: false, side: THREE.DoubleSide
+        });
+        const glowPlane = new THREE.Mesh(glowGeo, glowMat);
+        glowPlane.position.set(0, -5, -10);
+        scene.add(glowPlane);
+
+        // 2. A few early stars
+        const starCount = Math.floor(COUNTS.stars * 0.4);
+        const starGeo = this._createInstancedQuad(starCount);
+        const offsets = new Float32Array(starCount * 3);
+        const randoms = new Float32Array(starCount);
+        const starSizes = new Float32Array(starCount);
+        for (let i = 0; i < starCount; i++) {
+            offsets[i*3]   = (Math.random()-0.5) * 45;
+            offsets[i*3+1] = 5 + Math.random() * 20;
+            offsets[i*3+2] = -8 - Math.random() * 10;
+            randoms[i] = Math.random();
+            starSizes[i] = 0.06 + Math.random() * 0.14;
+        }
+        starGeo.setAttribute('aOffset', new THREE.InstancedBufferAttribute(offsets, 3));
+        starGeo.setAttribute('aRandom', new THREE.InstancedBufferAttribute(randoms, 1));
+        starGeo.setAttribute('aSize', new THREE.InstancedBufferAttribute(starSizes, 1));
+
+        const starMat = new THREE.ShaderMaterial({
+            uniforms: { uTime: { value: 0 }, uTex: { value: getSoftCircle() } },
+            vertexShader: `
+                attribute vec3 aOffset;
+                attribute float aRandom, aSize;
+                uniform float uTime;
+                varying float vAlpha;
+                varying vec2 vUv;
+                void main(){
+                    vUv = uv;
+                    vec4 viewPos = modelViewMatrix * vec4(aOffset, 1.0);
+                    viewPos.xy += position.xy * aSize;
+                    float twinkle = sin(uTime * (1.5 + aRandom * 3.0) + aRandom * 6.28) * 0.35 + 0.65;
+                    vAlpha = twinkle * (0.3 + aRandom * 0.5);
+                    gl_Position = projectionMatrix * viewPos;
+                }`,
+            fragmentShader: `
+                uniform sampler2D uTex;
+                varying float vAlpha;
+                varying vec2 vUv;
+                void main(){
+                    float a = texture2D(uTex, vUv).r;
+                    gl_FragColor = vec4(0.9, 0.9, 1.0, a * vAlpha);
+                }`,
+            transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+        });
+        const starMesh = new THREE.Mesh(starGeo, starMat);
+        scene.add(starMesh);
+
+        // 3. Warm + cool mixed light
+        const warmLight = new THREE.PointLight(0xff6633, 1.5, 50);
+        warmLight.position.copy(sunPos);
+        scene.add(warmLight);
+        const coolLight = new THREE.DirectionalLight(0x334466, 0.4);
+        coolLight.position.set(0, 10, 5);
+        scene.add(coolLight);
+
+        this.animations.set(cardId, (delta, time) => {
+            glowMat.uniforms.uTime.value = time;
+            starMat.uniforms.uTime.value = time;
         });
     }
 
