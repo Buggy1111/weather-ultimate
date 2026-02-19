@@ -219,6 +219,29 @@ class WeatherService {
         });
     }
 
+    async fetchAirPollution(lat, lon) {
+        const cacheKey = `airpollution-${lat}-${lon}`;
+        const cached = await this.cache.get(cacheKey);
+
+        if (cached) {
+            console.log('🎯 Air pollution cache hit:', cacheKey);
+            return cached;
+        }
+
+        return this.queueRequest(async () => {
+            const url = `${CONFIG.API_BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${CONFIG.API_KEY}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Air Pollution API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            await this.cache.set(cacheKey, data);
+            return data;
+        });
+    }
+
     async searchCity(query) {
         const url = `${CONFIG.GEO_API_URL}/direct?q=${encodeURIComponent(query)}&limit=5&appid=${CONFIG.API_KEY}`;
         const response = await fetch(url);
@@ -374,7 +397,7 @@ class ParticleSystem {
 
 // UI Components
 class UIComponents {
-    static weatherCard(city, data, forecast = null) {
+    static weatherCard(city, data, forecast = null, airPollution = null) {
         const weather = data.weather[0].main.toLowerCase();
         const mood = CONFIG.WEATHER_MOODS[weather] || CONFIG.WEATHER_MOODS['clear'];
         const emoji = this.getWeatherEmoji(weather);
@@ -432,6 +455,43 @@ class UIComponents {
             moonVisualHTML = window.MoonPhase.getVisualHTML(nowMs, data.weather[0].main);
         }
         
+        // Wind direction
+        const windDeg = data.wind?.deg;
+        const windDir = this.getWindDirection(windDeg);
+        const windArrowDeg = windDeg != null ? windDeg + 180 : 0; // arrow points TO direction
+        const windGust = data.wind?.gust;
+
+        // Pressure, visibility, clouds
+        const pressure = data.main?.pressure;
+        const visibility = data.visibility;
+        const cloudiness = data.clouds?.all;
+
+        // Rain / Snow amounts
+        const rainAmount = data.rain?.['1h'] || data.rain?.['3h'];
+        const snowAmount = data.snow?.['1h'] || data.snow?.['3h'];
+
+        // Temp range
+        const tempMin = data.main?.temp_min != null ? Math.round(data.main.temp_min) : null;
+        const tempMax = data.main?.temp_max != null ? Math.round(data.main.temp_max) : null;
+
+        // AQI
+        let aqiBadgeHTML = '';
+        if (airPollution?.list?.[0]) {
+            const aqi = airPollution.list[0].main.aqi;
+            const aqiInfo = this.getAQIInfo(aqi);
+            aqiBadgeHTML = `<span class="aqi-badge" style="--aqi-color: ${aqiInfo.color}; --aqi-bg: ${aqiInfo.bg}">${aqiInfo.emoji} Vzduch: ${aqiInfo.label}</span>`;
+        }
+
+        // Precipitation / extra bar
+        let extraInfoHTML = '';
+        const extraItems = [];
+        if (rainAmount) extraItems.push(`<span class="extra-info__item">🌧️ ${rainAmount.toFixed(1)} mm/h</span>`);
+        if (snowAmount) extraItems.push(`<span class="extra-info__item">🌨️ ${snowAmount.toFixed(1)} mm/h</span>`);
+        if (windGust) extraItems.push(`<span class="extra-info__item">💨 Nárazy: ${Math.round(windGust * 3.6)} km/h</span>`);
+        if (extraItems.length > 0) {
+            extraInfoHTML = `<div class="weather-extra">${extraItems.join('')}</div>`;
+        }
+
         // Process hourly forecast
         let hourlyForecastHTML = '';
         if (forecast && forecast.list) {
@@ -466,6 +526,11 @@ class UIComponents {
                      data-weather="${weather}"
                      data-lat="${city.lat}"
                      data-lon="${city.lon}"
+                     data-pressure="${pressure || ''}"
+                     data-visibility="${visibility || ''}"
+                     data-clouds="${cloudiness != null ? cloudiness : ''}"
+                     data-aqi="${airPollution?.list?.[0]?.main?.aqi || ''}"
+                     data-aqi-components='${airPollution?.list?.[0] ? JSON.stringify(airPollution.list[0].components) : ''}'
                      style="--mood-color-1: ${mood.colors[0]}; --mood-color-2: ${mood.colors[1]};"
                      role="listitem"
                      tabindex="0">
@@ -489,13 +554,24 @@ class UIComponents {
                 </header>
                 
                 <div class="weather-card__main">
-                    <div class="weather-card__temp">
-                        ${Math.round(data.main.temp)}<span class="weather-card__temp-unit">°C</span>
+                    <div class="weather-card__temp-group">
+                        <div class="weather-card__temp">
+                            ${Math.round(data.main.temp)}<span class="weather-card__temp-unit">°C</span>
+                        </div>
+                        ${tempMin != null && tempMax != null ? `
+                            <div class="weather-card__temp-range">
+                                <span class="temp-hi">↑ ${tempMax}°</span>
+                                <span class="temp-lo">↓ ${tempMin}°</span>
+                            </div>
+                        ` : ''}
                     </div>
                     <div class="weather-card__icon">${emoji}</div>
                 </div>
                 
-                <p class="weather-card__description">${czechDescription}</p>
+                <div class="weather-card__desc-row">
+                    <p class="weather-card__description">${czechDescription}</p>
+                    ${aqiBadgeHTML}
+                </div>
                 
                 <div class="weather-details">
                     <div class="detail">
@@ -510,10 +586,30 @@ class UIComponents {
                     </div>
                     <div class="detail">
                         <div class="detail__icon">💨</div>
-                        <div class="detail__value">${Math.round(data.wind.speed * 3.6)}</div>
-                        <div class="detail__label">km/h</div>
+                        <div class="detail__value">
+                            ${Math.round(data.wind.speed * 3.6)}
+                            ${windDeg != null ? `<span class="wind-arrow" style="--wind-deg: ${windArrowDeg}deg">↑</span>` : ''}
+                        </div>
+                        <div class="detail__label">${windDir ? `km/h ${windDir}` : 'km/h'}</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail__icon">🔻</div>
+                        <div class="detail__value">${pressure || '—'}</div>
+                        <div class="detail__label">hPa</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail__icon">👁️</div>
+                        <div class="detail__value">${this.formatVisibility(visibility)}</div>
+                        <div class="detail__label">Viditelnost</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail__icon">☁️</div>
+                        <div class="detail__value">${cloudiness != null ? cloudiness + '%' : '—'}</div>
+                        <div class="detail__label">Oblačnost</div>
                     </div>
                 </div>
+
+                ${extraInfoHTML}
                 
                 ${hourlyForecastHTML}
                 
@@ -652,6 +748,48 @@ class UIComponents {
         
         // If no translation found, return original
         return description;
+    }
+
+    static getWindDirection(deg) {
+        if (deg == null) return '';
+        const dirs = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
+        return dirs[Math.round(deg / 45) % 8];
+    }
+
+    static getAQIInfo(aqi) {
+        const levels = {
+            1: { label: 'Dobrá', color: '#4ade80', bg: 'rgba(74, 222, 128, 0.15)', emoji: '🟢' },
+            2: { label: 'Přijatelná', color: '#facc15', bg: 'rgba(250, 204, 21, 0.15)', emoji: '🟡' },
+            3: { label: 'Střední', color: '#fb923c', bg: 'rgba(251, 146, 60, 0.15)', emoji: '🟠' },
+            4: { label: 'Špatná', color: '#f87171', bg: 'rgba(248, 113, 113, 0.15)', emoji: '🔴' },
+            5: { label: 'Velmi špatná', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.15)', emoji: '🟣' }
+        };
+        return levels[aqi] || levels[3];
+    }
+
+    static formatVisibility(meters) {
+        if (meters == null) return '—';
+        if (meters >= 10000) return '10+ km';
+        if (meters >= 1000) return `${(meters / 1000).toFixed(1)} km`;
+        return `${meters} m`;
+    }
+
+    static formatPollutantValue(name, value) {
+        const limits = {
+            pm2_5: { good: 10, fair: 25, mod: 50, poor: 75, unit: 'μg/m³' },
+            pm10:  { good: 20, fair: 50, mod: 100, poor: 200, unit: 'μg/m³' },
+            o3:    { good: 60, fair: 100, mod: 140, poor: 180, unit: 'μg/m³' },
+            no2:   { good: 40, fair: 70, mod: 150, poor: 200, unit: 'μg/m³' },
+            so2:   { good: 20, fair: 80, mod: 250, poor: 350, unit: 'μg/m³' },
+            co:    { good: 4400, fair: 9400, mod: 12400, poor: 15400, unit: 'μg/m³' }
+        };
+        const info = limits[name];
+        if (!info) return { value: value.toFixed(1), unit: 'μg/m³', level: 'unknown' };
+        let level = 'good';
+        if (value > info.poor) level = 'poor';
+        else if (value > info.mod) level = 'moderate';
+        else if (value > info.fair) level = 'fair';
+        return { value: value.toFixed(1), unit: info.unit, level };
     }
 
     static getWeatherEmoji(weather) {
@@ -795,7 +933,9 @@ class WeatherUltimate {
                 try {
                     const data = await this.weatherService.fetchWeather(city.lat, city.lon);
                     const forecast = await this.weatherService.fetchForecast(city.lat, city.lon);
-                    return { city, data, forecast };
+                    let airPollution = null;
+                    try { airPollution = await this.weatherService.fetchAirPollution(city.lat, city.lon); } catch(e) { /* silent */ }
+                    return { city, data, forecast, airPollution };
                 } catch (error) {
                     console.error(`Error loading ${city.name}:`, error);
                     return null;
@@ -807,10 +947,10 @@ class WeatherUltimate {
 
             weatherGrid.innerHTML = '';
             
-            validResults.forEach(({ city, data, forecast }) => {
+            validResults.forEach(({ city, data, forecast, airPollution }) => {
                 data.id = `${city.lat}-${city.lon}`;
                 this.state.addCity(data);
-                const card = UIComponents.weatherCard(city, data, forecast);
+                const card = UIComponents.weatherCard(city, data, forecast, airPollution);
                 weatherGrid.insertAdjacentHTML('beforeend', card);
                 
                 // Add weather effects to card after it's in DOM
@@ -850,7 +990,9 @@ class WeatherUltimate {
 
             const weatherData = await this.weatherService.fetchWeather(city.lat, city.lon);
             const forecastData = await this.weatherService.fetchForecast(city.lat, city.lon);
-            
+            let airPollutionData = null;
+            try { airPollutionData = await this.weatherService.fetchAirPollution(city.lat, city.lon); } catch(e) { /* silent */ }
+
             const cityId = `${city.lat}-${city.lon}`;
             if (this.state.state.cities.has(cityId)) {
                 this.showNotification('Info', 'Toto město již sledujete', 'warning');
@@ -859,9 +1001,9 @@ class WeatherUltimate {
 
             weatherData.id = cityId;
             this.state.addCity(weatherData);
-            
+
             const weatherGrid = document.getElementById('weatherGrid');
-            const card = UIComponents.weatherCard(city, weatherData, forecastData);
+            const card = UIComponents.weatherCard(city, weatherData, forecastData, airPollutionData);
             weatherGrid.insertAdjacentHTML('afterbegin', card);
 
             const newCard = weatherGrid.firstElementChild;
@@ -982,15 +1124,17 @@ class WeatherUltimate {
     async showForecast(cityName, lat, lon) {
         try {
             this.showNotification('Načítám', 'Získávám 7-denní předpověď...', 'info');
-            
+
             const forecastData = await this.weatherService.fetchForecast(lat, lon);
-            
+            let airPollution = null;
+            try { airPollution = await this.weatherService.fetchAirPollution(lat, lon); } catch(e) { /* silent */ }
+
             // Process forecast data - group by days
             const dailyForecasts = this.processForecastData(forecastData.list);
-            
+
             // Create and show modal
-            this.showForecastModal(cityName, dailyForecasts);
-            
+            this.showForecastModal(cityName, dailyForecasts, airPollution);
+
         } catch (error) {
             this.showNotification('Chyba', 'Nepodařilo se načíst předpověď', 'error');
             console.error('Forecast error:', error);
@@ -1011,15 +1155,29 @@ class WeatherUltimate {
                     weather: [],
                     humidity: [],
                     wind: [],
+                    pressure: [],
+                    clouds: [],
+                    visibility: [],
+                    rain: 0,
+                    snow: 0,
+                    maxGust: 0,
+                    pop: [],
                     items: []
                 });
             }
-            
+
             const day = days.get(dayKey);
             day.temps.push(item.main.temp);
             day.weather.push(item.weather[0]);
             day.humidity.push(item.main.humidity);
             day.wind.push(item.wind.speed);
+            day.pressure.push(item.main.pressure);
+            if (item.clouds?.all != null) day.clouds.push(item.clouds.all);
+            if (item.visibility != null) day.visibility.push(item.visibility);
+            if (item.rain?.['3h']) day.rain += item.rain['3h'];
+            if (item.snow?.['3h']) day.snow += item.snow['3h'];
+            if (item.wind?.gust > day.maxGust) day.maxGust = item.wind.gust;
+            if (item.pop != null) day.pop.push(item.pop);
             day.items.push(item);
         });
         
@@ -1041,6 +1199,11 @@ class WeatherUltimate {
                 .sort((a, b) => b[1] - a[1])[0][0];
             const weatherInfo = day.weather.find(w => w.main === dominantWeather);
             
+            const avgPressure = day.pressure.length ? day.pressure.reduce((a, b) => a + b, 0) / day.pressure.length : null;
+            const avgClouds = day.clouds.length ? day.clouds.reduce((a, b) => a + b, 0) / day.clouds.length : null;
+            const minVisibility = day.visibility.length ? Math.min(...day.visibility) : null;
+            const maxPop = day.pop.length ? Math.max(...day.pop) : 0;
+
             dailyData.push({
                 date: day.date,
                 dayKey,
@@ -1049,6 +1212,13 @@ class WeatherUltimate {
                 maxTemp: Math.round(maxTemp),
                 avgHumidity: Math.round(avgHumidity),
                 avgWind: Math.round(avgWind * 3.6),
+                avgPressure: avgPressure ? Math.round(avgPressure) : null,
+                avgClouds: avgClouds != null ? Math.round(avgClouds) : null,
+                minVisibility,
+                rainTotal: Math.round(day.rain * 10) / 10,
+                snowTotal: Math.round(day.snow * 10) / 10,
+                maxGust: day.maxGust ? Math.round(day.maxGust * 3.6) : 0,
+                maxPop: Math.round(maxPop * 100),
                 weather: weatherInfo,
                 hourly: day.items
             });
@@ -1058,27 +1228,69 @@ class WeatherUltimate {
         return dailyData.slice(0, 7);
     }
 
-    showForecastModal(cityName, dailyForecasts) {
+    showForecastModal(cityName, dailyForecasts, airPollution = null) {
         // Remove existing modal if any
         const existingModal = document.getElementById('forecast-modal');
         if (existingModal) {
             existingModal.remove();
         }
-        
+
+        // AQI detail section
+        let aqiSectionHTML = '';
+        if (airPollution?.list?.[0]) {
+            const ap = airPollution.list[0];
+            const aqi = ap.main.aqi;
+            const aqiInfo = UIComponents.getAQIInfo(aqi);
+            const c = ap.components;
+            const pollutants = [
+                { key: 'pm2_5', label: 'PM2.5', val: c.pm2_5 },
+                { key: 'pm10', label: 'PM10', val: c.pm10 },
+                { key: 'o3', label: 'O₃', val: c.o3 },
+                { key: 'no2', label: 'NO₂', val: c.no2 },
+                { key: 'so2', label: 'SO₂', val: c.so2 },
+                { key: 'co', label: 'CO', val: c.co }
+            ];
+            aqiSectionHTML = `
+                <div class="aqi-detail">
+                    <h3 class="aqi-detail__title">🌬️ Kvalita vzduchu</h3>
+                    <div class="aqi-detail__header">
+                        <span class="aqi-detail__badge" style="--aqi-color: ${aqiInfo.color}; --aqi-bg: ${aqiInfo.bg}">
+                            ${aqiInfo.emoji} ${aqiInfo.label}
+                        </span>
+                        <span class="aqi-detail__index">AQI ${aqi}/5</span>
+                    </div>
+                    <div class="aqi-detail__grid">
+                        ${pollutants.map(p => {
+                            const info = UIComponents.formatPollutantValue(p.key, p.val);
+                            return `
+                                <div class="aqi-pollutant aqi-pollutant--${info.level}">
+                                    <span class="aqi-pollutant__label">${p.label}</span>
+                                    <span class="aqi-pollutant__value">${info.value}</span>
+                                    <span class="aqi-pollutant__unit">${info.unit}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
         // Create modal HTML
         const modalHTML = `
             <div id="forecast-modal" class="forecast-modal">
                 <div class="forecast-modal__content">
                     <button class="forecast-modal__close" onclick="window.weatherApp.closeForecastModal()">&times;</button>
                     <h2 class="forecast-modal__title">📅 7-denní předpověď pro ${cityName}</h2>
-                    
+
                     <div class="forecast-days">
                         ${dailyForecasts.map(day => this.createDayForecast(day)).join('')}
                     </div>
-                    
+
                     <div class="forecast-chart" id="forecastChart">
                         <canvas id="tempChart" width="800" height="200"></canvas>
                     </div>
+
+                    ${aqiSectionHTML}
                 </div>
             </div>
         `;
@@ -1127,6 +1339,12 @@ class WeatherUltimate {
                 <div class="forecast-day-card__details">
                     <div>💧 ${day.avgHumidity}%</div>
                     <div>💨 ${day.avgWind} km/h</div>
+                    ${day.avgPressure ? `<div>🔻 ${day.avgPressure} hPa</div>` : ''}
+                    ${day.avgClouds != null ? `<div>☁️ ${day.avgClouds}%</div>` : ''}
+                    ${day.rainTotal > 0 ? `<div>🌧️ ${day.rainTotal} mm</div>` : ''}
+                    ${day.snowTotal > 0 ? `<div>🌨️ ${day.snowTotal} mm</div>` : ''}
+                    ${day.maxGust > 0 ? `<div>💨 Nárazy ${day.maxGust}</div>` : ''}
+                    ${day.maxPop > 0 ? `<div>☔ ${day.maxPop}%</div>` : ''}
                 </div>
             </div>
         `;

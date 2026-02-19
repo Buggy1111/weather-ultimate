@@ -104,7 +104,14 @@
 .temp-max { color: #ff6b6b; }
 .temp-min { color: #4ecdc4; }
 .forecast-day-card__desc { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.8); margin-bottom: 0.75rem; text-transform: capitalize; }
-.forecast-day-card__details { display: flex; justify-content: space-around; font-size: var(--fs-xs); color: rgba(255, 255, 255, 0.6); }
+.forecast-day-card__details {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 0.5rem;
+    font-size: var(--fs-xs);
+    color: rgba(255, 255, 255, 0.6);
+}
 
 /* Temperature Chart */
 .forecast-chart {
@@ -119,3 +126,97 @@
     max-width: 100%;
     height: auto;
 }
+
+/* ---- AQI Detail Section (in modal) ---- */
+.aqi-detail {
+    margin-top: 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.aqi-detail__title {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.aqi-detail__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.aqi-detail__badge {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    padding: 0.35rem 0.9rem;
+    border-radius: 20px;
+    background: var(--aqi-bg);
+    color: var(--aqi-color);
+    border: 1px solid var(--aqi-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.aqi-detail__index {
+    font-size: var(--fs-sm);
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+}
+
+.aqi-detail__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.75rem;
+}
+
+.aqi-pollutant {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 0.75rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s;
+}
+
+.aqi-pollutant:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.aqi-pollutant__label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.35rem;
+}
+
+.aqi-pollutant__value {
+    display: block;
+    font-size: var(--fs-lg);
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.aqi-pollutant__unit {
+    display: block;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.35);
+    margin-top: 0.15rem;
+}
+
+.aqi-pollutant--good { border-color: rgba(74, 222, 128, 0.2); }
+.aqi-pollutant--good .aqi-pollutant__value { color: #4ade80; }
+.aqi-pollutant--fair { border-color: rgba(250, 204, 21, 0.2); }
+.aqi-pollutant--fair .aqi-pollutant__value { color: #facc15; }
+.aqi-pollutant--moderate { border-color: rgba(251, 146, 60, 0.2); }
+.aqi-pollutant--moderate .aqi-pollutant__value { color: #fb923c; }
+.aqi-pollutant--poor { border-color: rgba(248, 113, 113, 0.2); }
+.aqi-pollutant--poor .aqi-pollutant__value { color: #f87171; }
