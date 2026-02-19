@@ -207,8 +207,47 @@ class WeatherSounds {
                 
                 @media (max-width: 768px) {
                     #weather-sounds-ui {
-                        bottom: 4rem;
-                        transform: scale(0.9);
+                        bottom: 1.5rem;
+                        left: 1rem;
+                        padding: 0;
+                        gap: 0;
+                        border-radius: 28px;
+                        width: 52px;
+                        height: 52px;
+                        justify-content: center;
+                        overflow: hidden;
+                        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+                    #weather-sounds-ui.mobile-expanded {
+                        width: calc(100vw - 2rem);
+                        border-radius: 16px;
+                        padding: 0.75rem 1rem;
+                        gap: 0.75rem;
+                        justify-content: flex-start;
+                    }
+                    #weather-sounds-ui:not(.mobile-expanded) #volume-slider,
+                    #weather-sounds-ui:not(.mobile-expanded) .sound-status,
+                    #weather-sounds-ui:not(.mobile-expanded) .sound-visualizer {
+                        display: none !important;
+                    }
+                    #weather-sounds-ui:hover {
+                        transform: none;
+                    }
+                    #sound-toggle {
+                        padding: 0;
+                        font-size: 1.4rem;
+                        flex-shrink: 0;
+                    }
+                    #volume-slider {
+                        flex: 1;
+                        min-width: 0;
+                    }
+                    .sound-status {
+                        min-width: auto;
+                        font-size: 0.75rem;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
                 }
             </style>
@@ -226,9 +265,41 @@ class WeatherSounds {
         `;
         
         document.body.appendChild(ui);
-        
-        // Event listeners
-        document.getElementById('sound-toggle').addEventListener('click', () => this.toggleSound());
+
+        // Mobile: tap toggle = mute/unmute, long-press = expand panel
+        const toggle = document.getElementById('sound-toggle');
+        let longPressTimer = null;
+        let wasLongPress = false;
+
+        toggle.addEventListener('touchstart', (e) => {
+            wasLongPress = false;
+            longPressTimer = setTimeout(() => {
+                wasLongPress = true;
+                ui.classList.toggle('mobile-expanded');
+            }, 400);
+        }, { passive: true });
+
+        toggle.addEventListener('touchend', (e) => {
+            clearTimeout(longPressTimer);
+            if (!wasLongPress) {
+                this.toggleSound();
+            }
+        });
+
+        // Collapse on outside tap (mobile)
+        document.addEventListener('touchstart', (e) => {
+            if (ui.classList.contains('mobile-expanded') && !ui.contains(e.target)) {
+                ui.classList.remove('mobile-expanded');
+            }
+        }, { passive: true });
+
+        // Desktop: normal click
+        toggle.addEventListener('click', (e) => {
+            // Only handle on non-touch devices (touch handled above)
+            if (e.sourceCapabilities?.firesTouchEvents) return;
+            this.toggleSound();
+        });
+
         document.getElementById('volume-slider').addEventListener('input', (e) => {
             this.volume = e.target.value / 100;
             this.updateVolume();

@@ -2178,19 +2178,61 @@ if ('connection' in navigator) {
     });
 }
 
-// Geolocation
+// Geolocation — add user's city to dashboard
 function getUserLocationWeather() {
     if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 const { latitude, longitude } = position.coords;
                 console.log(`📍 User location: ${latitude}, ${longitude}`);
-                
+
                 if (window.weatherApp) {
                     try {
-                        const weatherService = window.weatherApp.weatherService;
-                        const data = await weatherService.fetchWeather(latitude, longitude);
-                        console.log('📍 User location weather:', data);
+                        const app = window.weatherApp;
+                        const ws = app.weatherService;
+
+                        // Check if this location is already tracked (within ~10km)
+                        const existing = Array.from(app.state.state.cities.values()).find(c => {
+                            const dlat = Math.abs(c.coord.lat - latitude);
+                            const dlon = Math.abs(c.coord.lon - longitude);
+                            return dlat < 0.1 && dlon < 0.1;
+                        });
+                        if (existing) {
+                            console.log('📍 Location already tracked:', existing.name);
+                            return;
+                        }
+
+                        const data = await ws.fetchWeather(latitude, longitude);
+                        const forecast = await ws.fetchForecast(latitude, longitude);
+                        let airPollution = null;
+                        try { airPollution = await ws.fetchAirPollution(latitude, longitude); } catch(e) { /* silent */ }
+
+                        const city = {
+                            name: data.name,
+                            country: data.sys?.country || '',
+                            lat: latitude,
+                            lon: longitude
+                        };
+
+                        const cityId = `${latitude}-${longitude}`;
+                        data.id = cityId;
+                        app.state.addCity(data);
+
+                        const weatherGrid = document.getElementById('weatherGrid');
+                        const card = UIComponents.weatherCard(city, data, forecast, airPollution);
+                        weatherGrid.insertAdjacentHTML('afterbegin', card);
+
+                        const newCard = weatherGrid.firstElementChild;
+                        newCard.style.opacity = '0';
+                        newCard.style.transform = 'translateY(-20px) scale(0.95)';
+                        requestAnimationFrame(() => {
+                            newCard.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                            newCard.style.opacity = '1';
+                            newCard.style.transform = 'translateY(0) scale(1)';
+                        });
+
+                        console.log(`📍 Added user location: ${city.name}`);
+                        app.showNotification('📍 Vaše poloha', `${city.name} přidáno na dashboard`, 'success');
                     } catch (error) {
                         console.error('Error fetching user location weather:', error);
                     }
