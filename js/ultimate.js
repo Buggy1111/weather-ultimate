@@ -1194,14 +1194,22 @@ class WeatherUltimate {
             }, 300);
         });
 
+        // Detect touch device — on touch, only forecast button opens modal (not card body)
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
         document.addEventListener('click', (e) => {
+            // Close search suggestions
             if (!e.target.closest('.search-container')) {
                 searchSuggestions.classList.remove('search-suggestions--active');
             }
-            
+
+            // Card body click → open forecast (desktop only)
+            // On mobile, touching the card to scroll must not open the modal
+            if (isTouchDevice) return;
+
             const card = e.target.closest('.weather-card');
-            if (card && 
-                !e.target.closest('.forecast-button') && 
+            if (card &&
+                !e.target.closest('.forecast-button') &&
                 !e.target.closest('.hourly-forecast') &&
                 !e.target.closest('.hourly-item')) {
                 this.handleCardClick(card);
