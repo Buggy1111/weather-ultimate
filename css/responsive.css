@@ -20,6 +20,9 @@
     .forecast-modal__content { padding: 1rem; border-radius: 16px; }
     .weather-3d-container { display: none !important; }
     .weather-card__moon-badge { display: none; }
+    .moon-visual { width: 44px; height: 44px; top: 3rem; right: 0.8rem; }
+    .moon-visual__label { display: none; }
+    .moon-visual__clouds { display: none; }
 }
 
 /* Small Phones (360px - 480px) */

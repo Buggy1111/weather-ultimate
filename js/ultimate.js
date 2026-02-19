@@ -426,8 +426,10 @@ class UIComponents {
 
         // Moon phase (show during night, twilight, dawn)
         let moonBadgeHTML = '';
+        let moonVisualHTML = '';
         if (dayPhase !== 'day' && window.MoonPhase) {
             moonBadgeHTML = window.MoonPhase.getBadgeHTML(nowMs);
+            moonVisualHTML = window.MoonPhase.getVisualHTML(nowMs, data.weather[0].main);
         }
         
         // Process hourly forecast
@@ -471,7 +473,8 @@ class UIComponents {
                     <div class="live-badge__dot"></div>
                     <span>Live</span>
                 </div>
-                
+                ${moonVisualHTML}
+
                 <header class="weather-card__header">
                     <h3 class="weather-card__city">${city.name}</h3>
                     <p class="weather-card__country">${city.country || ''}</p>
@@ -1442,17 +1445,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 badge.className = `weather-card__daynight-badge weather-card__daynight-badge--${dayPhase}`;
             }
 
-            // Update moon badge (show during night/twilight/dawn, hide during day)
+            // Update moon (show during night/twilight/dawn, hide during day)
+            const card = el.closest('.weather-card');
             let moonBadge = el.querySelector('.weather-card__moon-badge');
+            let moonVisual = card ? card.querySelector('.moon-visual') : null;
             if (dayPhase !== 'day' && window.MoonPhase) {
                 if (!moonBadge) {
                     el.insertAdjacentHTML('beforeend', window.MoonPhase.getBadgeHTML());
                 }
-            } else if (moonBadge) {
-                moonBadge.remove();
+                if (!moonVisual && card) {
+                    const cardWeather = card.dataset.weather || 'clear';
+                    card.insertAdjacentHTML('afterbegin', window.MoonPhase.getVisualHTML(undefined, cardWeather));
+                }
+            } else {
+                if (moonBadge) moonBadge.remove();
+                if (moonVisual) moonVisual.remove();
             }
 
-            const card = el.closest('.weather-card');
             if (card) {
                 card.classList.remove('weather-card--day', 'weather-card--night', 'weather-card--dawn', 'weather-card--twilight');
                 card.classList.add(`weather-card--${dayPhase}`);
