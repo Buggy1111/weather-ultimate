@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Next-gen weather experience s AI predikcemi a real-time vizualizacemi">
+    <meta name="theme-color" content="#667eea">
+    <meta name="author" content="Michal Bürgermeister">
+    <title>Weather Ultimate - Budoucnost předpovědi počasí</title>
+    
+    <!-- Favicony - relativní cesty -->
+    <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon/favicon-16x16.png">
+    <link rel="shortcut icon" href="./favicon/favicon.ico">
+    
+    <!-- Apple zařízení -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicon/apple-touch-icon.png">
+    
+    <!-- Android a Chrome -->
+    <link rel="icon" type="image/png" sizes="192x192" href="./favicon/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./favicon/android-chrome-512x512.png">
+    
+    <!-- Windows -->
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-TileImage" content="./favicon/mstile-144x144.png">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Preconnect & Prefetch -->
+    <link rel="preconnect" href="https://api.openweathermap.org">
+    <link rel="dns-prefetch" href="https://api.openweathermap.org">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="./styles.css?v=2">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="universe-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Header -->
+    <header class="hero">
+        <div class="container">
+            <h1 class="hero__title">
+                <span class="hero__title-word">Weather</span>
+                <span class="hero__title-word">Ultimate</span>
+            </h1>
+            <p class="hero__subtitle">
+                Zažijte počasí jako nikdy předtím s AI predikcemi a real-time vizualizacemi
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- AI Insights Section -->
+        <section class="ai-insights" id="aiInsights">
+            <h2 class="ai-insights__title">
+                <span>🤖</span>
+                AI Předpověď
+            </h2>
+            <p class="ai-insights__content" id="aiContent">
+                Analyzuji globální meteorologická data...
+            </p>
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="quick-stats" id="quickStats">
+            <div class="stat-card">
+                <div class="stat-card__icon">🌍</div>
+                <div class="stat-card__value" id="totalCities">0</div>
+                <div class="stat-card__label">Sledovaných měst</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__icon">🌡️</div>
+                <div class="stat-card__value" id="avgTemp">--°C</div>
+                <div class="stat-card__label">Průměrná teplota</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__icon">☀️</div>
+                <div class="stat-card__value" id="sunnyCount">0</div>
+                <div class="stat-card__label">Slunečných míst</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card__icon">⚡</div>
+                <div class="stat-card__value" id="updateTime">--:--</div>
+                <div class="stat-card__label">Poslední update</div>
+            </div>
+        </section>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <form class="search-input-group" id="searchForm">
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            id="searchInput"
+                            placeholder="Hledejte města po celém světě..."
+                            autocomplete="off"
+                            aria-label="Vyhledat město"
+                            aria-describedby="search-suggestions"
+                        >
+                        <button type="submit" class="search-button" aria-label="Hledat">
+                            🔍
+                        </button>
+                    </form>
+                </div>
+                <div class="search-suggestions" id="searchSuggestions" role="listbox"></div>
+            </div>
+        </section>
+
+        <!-- Weather Grid -->
+        <section class="weather-grid" id="weatherGrid" role="list" aria-live="polite"></section>
+    </main>
+
+    <!-- Notification -->
+    <div id="notification" class="notification" role="alert" aria-live="assertive"></div>
+
+    <!-- Scripts -->
+    <!-- Three.js for 3D effects -->
+    <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
+
+    <!-- Weather Modules -->
+    <script src="./js/weather-effects.js"></script>
+    <script src="./js/weather-3d-effects.js?v=2"></script>
+    <script src="./js/weather-sounds.js"></script>
+    
+    <!-- Main Application -->
+    <script src="./js/ultimate.js"></script>
+</body>
+</html>
