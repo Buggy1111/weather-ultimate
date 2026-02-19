@@ -8,22 +8,22 @@
     <meta name="author" content="Michal Bürgermeister">
     <title>Weather Ultimate - Budoucnost předpovědi počasí</title>
     
-    <!-- Favicony - relativní cesty -->
-    <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="./favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./favicon/favicon-16x16.png">
-    <link rel="shortcut icon" href="./favicon/favicon.ico">
-    
+    <!-- Favicony -->
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon/favicon-16x16.png">
+    <link rel="shortcut icon" href="./assets/favicon/favicon.ico">
+
     <!-- Apple zařízení -->
-    <link rel="apple-touch-icon" sizes="180x180" href="./favicon/apple-touch-icon.png">
-    
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicon/apple-touch-icon.png">
+
     <!-- Android a Chrome -->
-    <link rel="icon" type="image/png" sizes="192x192" href="./favicon/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="./favicon/android-chrome-512x512.png">
-    
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/favicon/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./assets/favicon/android-chrome-512x512.png">
+
     <!-- Windows -->
     <meta name="msapplication-TileColor" content="#667eea">
-    <meta name="msapplication-TileImage" content="./favicon/mstile-144x144.png">
+    <meta name="msapplication-TileImage" content="./assets/favicon/mstile-144x144.png">
     
     <!-- Web App Manifest -->
     <link rel="manifest" href="./manifest.json">
@@ -33,7 +33,7 @@
     <link rel="dns-prefetch" href="https://api.openweathermap.org">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="./styles.css?v=2">
+    <link rel="stylesheet" href="./css/main.css">
 </head>
 <body>
     <!-- Background Elements -->
@@ -127,11 +127,14 @@
     <!-- Three.js for 3D effects -->
     <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
 
-    <!-- Weather Modules -->
-    <script src="./js/weather-effects.js"></script>
-    <script src="./js/weather-3d-effects.js?v=2"></script>
-    <script src="./js/weather-sounds.js"></script>
-    
+    <!-- Weather Effects -->
+    <script src="./js/effects/weather-2d.js"></script>
+    <script src="./js/effects/weather-3d.js"></script>
+    <script src="./js/effects/sounds.js"></script>
+
+    <!-- Modules -->
+    <script src="./js/modules/moon.js"></script>
+
     <!-- Main Application -->
     <script src="./js/ultimate.js"></script>
 </body>

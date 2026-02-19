@@ -1,0 +1,74 @@
+/* ===================================
+   Utility Classes & Accessibility
+   =================================== */
+
+/* Reduce animations */
+.reduce-animations * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+}
+
+/* Data saver */
+.data-saver-mode .orb,
+.data-saver-mode #particle-canvas,
+.data-saver-mode .weather-card::before {
+    display: none !important;
+}
+
+.data-saver-mode .weather-card {
+    box-shadow: none !important;
+}
+
+/* Dark environment */
+.dark-environment {
+    filter: brightness(0.8);
+}
+
+#debug-panel {
+    filter: none !important;
+}
+
+/* Accessibility */
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .weather-card { border: 2px solid white; }
+    .detail { border: 2px solid white; }
+    .weather-card__temp,
+    .weather-card__city {
+        text-shadow: none;
+        -webkit-text-stroke: 1px white;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .weather-3d-container { display: none !important; }
+    #particle-canvas { display: none !important; }
+    .orb { animation: none !important; }
+}
+
+/* Print Styles */
+@media print {
+    .orb, #particle-canvas, .weather-3d-container,
+    .search-section, .notification,
+    #weather-sounds-ui, #debug-panel {
+        display: none !important;
+    }
+    .weather-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    body { background: white; color: black; }
+}

@@ -1,0 +1,121 @@
+/* ===================================
+   Forecast Modal & Day Cards
+   =================================== */
+
+.forecast-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s var(--ease-smooth);
+    padding: clamp(0.5rem, 2vw, 2rem);
+}
+
+.forecast-modal--show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.forecast-modal__content {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: clamp(16px, 2vw, 24px);
+    padding: clamp(1rem, 2vw, 2rem);
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s var(--ease-bounce);
+}
+
+.forecast-modal--show .forecast-modal__content {
+    transform: scale(1);
+}
+
+.forecast-modal__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.forecast-modal__close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+}
+
+.forecast-modal__title {
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Forecast Days Grid */
+.forecast-days {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.forecast-day-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s var(--ease-smooth);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.forecast-day-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-4px);
+    border-color: var(--color-primary);
+}
+
+.forecast-day-card__header h3 { font-size: var(--fs-base); font-weight: 600; margin-bottom: 0.25rem; color: var(--color-primary); }
+.forecast-day-card__header p { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.6); }
+.forecast-day-card__icon { font-size: 3rem; margin: 1rem 0; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)); }
+.forecast-day-card__temps { display: flex; justify-content: center; gap: 1rem; margin-bottom: 0.5rem; font-size: var(--fs-lg); font-weight: 700; }
+.temp-max { color: #ff6b6b; }
+.temp-min { color: #4ecdc4; }
+.forecast-day-card__desc { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.8); margin-bottom: 0.75rem; text-transform: capitalize; }
+.forecast-day-card__details { display: flex; justify-content: space-around; font-size: var(--fs-xs); color: rgba(255, 255, 255, 0.6); }
+
+/* Temperature Chart */
+.forecast-chart {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 1rem;
+    margin-top: 2rem;
+    overflow-x: auto;
+}
+
+#tempChart {
+    max-width: 100%;
+    height: auto;
+}

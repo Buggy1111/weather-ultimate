@@ -423,6 +423,12 @@ class UIComponents {
         } else {
             dayPhase = 'night'; dayPhaseEmoji = '🌙'; dayPhaseText = 'Noc';
         }
+
+        // Moon phase (show during night, twilight, dawn)
+        let moonBadgeHTML = '';
+        if (dayPhase !== 'day' && window.MoonPhase) {
+            moonBadgeHTML = window.MoonPhase.getBadgeHTML(nowMs);
+        }
         
         // Process hourly forecast
         let hourlyForecastHTML = '';
@@ -475,6 +481,7 @@ class UIComponents {
                          data-sunset="${data.sys.sunset}">
                         <span class="weather-card__clock">${localTimeStr}</span>
                         <span class="weather-card__daynight-badge weather-card__daynight-badge--${dayPhase}">${dayPhaseEmoji} ${dayPhaseText}</span>
+                        ${moonBadgeHTML}
                     </div>
                 </header>
                 
@@ -1433,6 +1440,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (badge) {
                 badge.textContent = phaseText;
                 badge.className = `weather-card__daynight-badge weather-card__daynight-badge--${dayPhase}`;
+            }
+
+            // Update moon badge (show during night/twilight/dawn, hide during day)
+            let moonBadge = el.querySelector('.weather-card__moon-badge');
+            if (dayPhase !== 'day' && window.MoonPhase) {
+                if (!moonBadge) {
+                    el.insertAdjacentHTML('beforeend', window.MoonPhase.getBadgeHTML());
+                }
+            } else if (moonBadge) {
+                moonBadge.remove();
             }
 
             const card = el.closest('.weather-card');

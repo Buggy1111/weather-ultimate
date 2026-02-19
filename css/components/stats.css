@@ -1,0 +1,50 @@
+/* ===================================
+   Quick Stats
+   =================================== */
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: clamp(0.75rem, 1.5vw, 1.5rem);
+    margin: clamp(1.5rem, 3vw, 3rem) 0;
+}
+
+.stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: clamp(0.75rem, 1.5vw, 1.5rem);
+    text-align: center;
+    position: relative;
+    overflow: visible;
+    transition: all 0.3s var(--ease-smooth);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-elevation-3);
+}
+
+.stat-card__icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card__value {
+    font-size: clamp(1.2rem, calc(0.8rem + 2.5vw), 3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+
+.stat-card__label {
+    font-size: var(--fs-sm);
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.5rem;
+}

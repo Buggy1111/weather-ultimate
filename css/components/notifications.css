@@ -1,0 +1,47 @@
+/* ===================================
+   Notifications & Skeleton Loading
+   =================================== */
+
+.notification {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transform: translateX(calc(100% + 2rem));
+    transition: transform 0.3s var(--ease-smooth);
+    z-index: 1000;
+    max-width: 400px;
+}
+
+.notification--show { transform: translateX(0); }
+.notification__icon { font-size: 1.5rem; }
+.notification__content { flex: 1; }
+.notification__title { font-weight: 600; margin-bottom: 0.25rem; }
+.notification__message { font-size: var(--fs-sm); color: rgba(255, 255, 255, 0.8); }
+
+/* Loading Skeleton */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+    animation: skeleton-wave 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-wave {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}

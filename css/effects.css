@@ -1,0 +1,46 @@
+/* ===================================
+   Weather Effects & 3D Containers
+   =================================== */
+
+.weather-3d-container {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+    opacity: 0.7;
+    pointer-events: none !important;
+}
+
+.weather-card.rain-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.weather-card.rain-effect::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(100, 150, 200, 0.1) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.thunder-shake {
+    animation: thunder-shake 0.3s ease-out;
+}
+
+@keyframes thunder-shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.weather-card-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 2;
+}

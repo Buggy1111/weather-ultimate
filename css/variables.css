@@ -1,0 +1,37 @@
+/* ===================================
+   CSS Variables & Design Tokens
+   =================================== */
+
+:root {
+    --hue-primary: 250;
+    --hue-accent: 280;
+    --saturation: 70%;
+    --lightness: 60%;
+
+    --color-primary: hsl(var(--hue-primary), var(--saturation), var(--lightness));
+    --color-primary-dark: hsl(var(--hue-primary), var(--saturation), calc(var(--lightness) - 20%));
+    --color-primary-light: hsl(var(--hue-primary), var(--saturation), calc(var(--lightness) + 20%));
+    --color-accent: hsl(var(--hue-accent), var(--saturation), var(--lightness));
+
+    --fs-xs: clamp(0.7rem, calc(0.7rem + 0.2vw), 0.875rem);
+    --fs-sm: clamp(0.8rem, calc(0.8rem + 0.3vw), 1rem);
+    --fs-base: clamp(0.9rem, calc(0.9rem + 0.4vw), 1.125rem);
+    --fs-lg: clamp(1.1rem, calc(1.1rem + 0.6vw), 1.5rem);
+    --fs-xl: clamp(1.3rem, calc(1.3rem + 0.8vw), 2rem);
+    --fs-2xl: clamp(1.8rem, calc(1.8rem + 1.2vw), 3rem);
+    --fs-3xl: clamp(2.2rem, calc(2.2rem + 1.8vw), 4rem);
+
+    --shadow-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-elevation-2: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-elevation-3: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-elevation-4: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+
+    --glass-blur: 20px;
+    --glass-bg: rgba(255, 255, 255, 0.02);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+}
