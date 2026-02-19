@@ -281,33 +281,176 @@ class WeatherService {
 // AI Predictions Engine
 class AIPredictions {
     constructor() {
-        this.predictions = [
-            "Podle analýzy tlakových systémů očekávejte stabilní počasí v následujících 48 hodinách.",
-            "Detekuji přibližující se frontální systém. Připravte se na změnu počasí během 24-36 hodin.",
-            "Satelitní data ukazují na formování vysokotlakové oblasti. Slunečné dny jsou na obzoru!",
-            "Analyzuji proudění vzduchu - výrazné ochlazení není v dohledu.",
-            "Modely předpovídají nadprůměrné teploty pro toto roční období."
-        ];
+        this.insightIndex = 0;
+        this.lastInsights = [];
     }
 
     generatePrediction(weatherData) {
-        const temps = weatherData.map(d => d.main.temp);
-        const avgTemp = temps.reduce((a, b) => a + b, 0) / temps.length;
-        const conditions = weatherData.map(d => d.weather[0].main);
-        
-        let prediction = this.predictions[Math.floor(Math.random() * this.predictions.length)];
-        
-        if (avgTemp > 25) {
-            prediction = "🔥 Detekuji výrazně nadprůměrné teploty. Doporučuji zvýšený příjem tekutin a vyhýbání se přímému slunci.";
-        } else if (avgTemp < 5) {
-            prediction = "❄️ Nízké teploty napříč regiony. Oblečte se teple a připravte se na možné námrazy.";
+        const insights = this.analyzeWeather(weatherData);
+        if (insights.length === 0) return 'Analyzuji dostupná data...';
+
+        // Cycle through insights on each call
+        if (this.insightIndex >= insights.length) this.insightIndex = 0;
+        const insight = insights[this.insightIndex];
+        this.insightIndex++;
+        this.lastInsights = insights;
+        return insight;
+    }
+
+    analyzeWeather(data) {
+        if (!data || data.length === 0) return [];
+
+        const n = data.length;
+        const temps = data.map(d => d.main.temp);
+        const feelsLike = data.map(d => d.main.feels_like);
+        const pressures = data.map(d => d.main.pressure);
+        const humidities = data.map(d => d.main.humidity);
+        const winds = data.map(d => (d.wind.speed * 3.6));
+        const gusts = data.filter(d => d.wind.gust).map(d => d.wind.gust * 3.6);
+        const clouds = data.map(d => d.clouds.all);
+        const visibilities = data.map(d => (d.visibility || 10000));
+        const conditions = data.map(d => d.weather[0].main);
+
+        const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+        const mn = arr => Math.min(...arr);
+        const mx = arr => Math.max(...arr);
+        const r = v => Math.round(v);
+
+        const avgTemp = avg(temps);
+        const avgPressure = avg(pressures);
+        const avgHumidity = avg(humidities);
+        const avgWind = avg(winds);
+        const tempSpread = mx(temps) - mn(temps);
+        const feelsLikeDiff = avgTemp - avg(feelsLike);
+
+        // Count conditions
+        const cc = {};
+        conditions.forEach(c => cc[c] = (cc[c] || 0) + 1);
+        const rainCount = (cc['Rain'] || 0) + (cc['Drizzle'] || 0);
+        const snowCount = cc['Snow'] || 0;
+        const clearCount = cc['Clear'] || 0;
+        const stormCount = cc['Thunderstorm'] || 0;
+        const cloudCount = cc['Clouds'] || 0;
+
+        const alerts = [];   // priority 0 - shown first
+        const warnings = []; // priority 1
+        const analyses = []; // priority 2 - normal insights
+
+        // === ALERTS (extreme conditions) ===
+        if (mn(temps) < -15) {
+            alerts.push(`⚠️ Extrémní mráz ${r(mn(temps))}°C — riziko omrzlin a hypotermie. Omezte pobyt venku na minimum.`);
+        } else if (mn(temps) < -10) {
+            alerts.push(`⚠️ Silný mráz ${r(mn(temps))}°C detekován. Riziko námrazy na vozovkách a potrubí.`);
         }
-        
-        if (conditions.filter(c => c === 'Rain').length > weatherData.length / 2) {
-            prediction = "🌧️ Rozsáhlé srážkové systémy dominují. Nezapomeňte na deštník!";
+        if (mx(temps) > 38) {
+            alerts.push(`🔥 Extrémní vedro ${r(mx(temps))}°C — tepelný stres je reálné riziko. Pijte min. 3l tekutin denně.`);
+        } else if (mx(temps) > 33) {
+            alerts.push(`🔥 Vysoké teploty až ${r(mx(temps))}°C. Vyhněte se přímému slunci mezi 11–16h.`);
         }
-        
-        return prediction;
+        if (stormCount > 0) {
+            alerts.push(`⛈️ Bouřková aktivita v ${stormCount} z ${n} měst! Vyhněte se otevřeným prostranstvím.`);
+        }
+        if (mx(gusts) > 80) {
+            alerts.push(`💨 Extrémní nárazy větru až ${r(mx(gusts))} km/h — riziko pádu stromů a poškození objektů.`);
+        }
+
+        // === WARNINGS ===
+        if (avgTemp > -2 && avgTemp < 2 && avgHumidity > 75 && rainCount > 0) {
+            warnings.push(`🧊 Teploty kolem bodu mrazu (${r(avgTemp)}°C) se srážkami — vysoké riziko ledovky a náledí!`);
+        }
+        if (avgHumidity > 90 && avgTemp < 5 && avgWind < 10) {
+            warnings.push(`🌫️ Vlhkost ${r(avgHumidity)}% při ${r(avgTemp)}°C a slabém větru — podmínky pro husté mlhy.`);
+        }
+        if (snowCount > 0 && avgWind > 25) {
+            warnings.push(`🌨️ Sněžení s větrem ${r(avgWind)} km/h — možná tvorba sněhových jazyků a závějí.`);
+        }
+        if (mn(visibilities) < 1000) {
+            warnings.push(`👁️ Viditelnost pod 1 km — zvýšená opatrnost v dopravě, rozsvěťte mlhovky.`);
+        }
+
+        // === ANALYSES ===
+
+        // Pressure analysis
+        if (avgPressure < 1000) {
+            analyses.push(`🌀 Hluboká tlaková níže (${r(avgPressure)} hPa) — aktivní cyklonální činnost přináší nestabilní počasí a srážky.`);
+        } else if (avgPressure > 1025) {
+            analyses.push(`📈 Silná tlaková výše ${r(avgPressure)} hPa — anticyklóna přináší stabilní, jasné počasí s minimem srážek.`);
+        } else if (avgPressure < 1010) {
+            analyses.push(`📉 Snížený tlak ${r(avgPressure)} hPa naznačuje příchod frontálního systému — možné zhoršení během 12–24h.`);
+        } else {
+            analyses.push(`📊 Tlak ${r(avgPressure)} hPa je v normálu — bez výrazných synoptických změn.`);
+        }
+
+        // Temperature spread
+        if (tempSpread > 25) {
+            analyses.push(`🌡️ Obrovský teplotní kontrast ${r(tempSpread)}°C (od ${r(mn(temps))}°C do ${r(mx(temps))}°C) — různé vzduchové hmoty ovlivňují regiony.`);
+        } else if (tempSpread > 15) {
+            analyses.push(`🌡️ Výrazný teplotní gradient ${r(tempSpread)}°C mezi městy ukazuje na rozhraní vzduchových hmot.`);
+        } else if (tempSpread > 8) {
+            analyses.push(`📊 Teplotní rozpětí ${r(tempSpread)}°C (${r(mn(temps))}°C – ${r(mx(temps))}°C) odpovídá regionálním rozdílům.`);
+        }
+
+        // Feels-like analysis
+        if (feelsLikeDiff > 6) {
+            analyses.push(`🥶 Vítr a vlhkost snižují pocitovou teplotu v průměru o ${r(feelsLikeDiff)}°C — skutečný pocit: ${r(avg(feelsLike))}°C.`);
+        } else if (feelsLikeDiff > 3) {
+            analyses.push(`🌬️ Pocitová teplota o ${r(feelsLikeDiff)}°C nižší než naměřená kvůli proudění vzduchu.`);
+        } else if (feelsLikeDiff < -2) {
+            analyses.push(`🌡️ Vlhkost zesiluje tepelný diskomfort — pocitově o ${r(Math.abs(feelsLikeDiff))}°C tepleji než ukazuje teploměr.`);
+        }
+
+        // Wind analysis
+        if (avgWind > 40) {
+            analyses.push(`💨 Silný vítr průměrně ${r(avgWind)} km/h — komplikace v dopravě, riziko pádů větví.`);
+        } else if (avgWind > 25) {
+            analyses.push(`🌬️ Zvýšená větrnost ${r(avgWind)} km/h — počítejte s ochlazeným pocitem a rozvlněnými vlajkami.`);
+        }
+
+        // Dominant conditions
+        if (rainCount > n * 0.6) {
+            analyses.push(`🌧️ Srážky dominují — déšť v ${rainCount} z ${n} měst. Frontální systém je aktivní.`);
+        }
+        if (snowCount > n * 0.3) {
+            analyses.push(`❄️ Sněžení zasahuje ${snowCount} z ${n} měst — zimní podmínky na silnicích.`);
+        }
+        if (clearCount === n && n > 1) {
+            analyses.push(`☀️ Jasno ve všech ${n} městech — anticyklóna zajišťuje stabilní slunečné počasí.`);
+        } else if (clearCount > n * 0.6) {
+            analyses.push(`☀️ Převážně jasno v ${clearCount} z ${n} měst — příznivé podmínky pro venkovní aktivity.`);
+        }
+        if (cloudCount > n * 0.7 && rainCount === 0) {
+            analyses.push(`☁️ Oblačno v ${cloudCount} z ${n} měst, ale bez srážek — oblačnost brání prohřátí.`);
+        }
+
+        // Humidity analysis
+        if (avgHumidity > 85 && avgTemp > 20) {
+            analyses.push(`💧 Vysoká vlhkost ${r(avgHumidity)}% při ${r(avgTemp)}°C — dusné, tropické podmínky.`);
+        } else if (avgHumidity < 30) {
+            analyses.push(`🏜️ Velmi nízká vlhkost ${r(avgHumidity)}% — vysušený vzduch, zvyšte příjem tekutin.`);
+        }
+
+        // Cloud cover
+        const avgClouds = avg(clouds);
+        if (avgClouds > 90) {
+            analyses.push(`☁️ Souvislá oblačnost (${r(avgClouds)}%) — minimální sluneční svit, UV index nízký.`);
+        }
+
+        // Seasonal context
+        const month = new Date().getMonth();
+        if ((month >= 11 || month <= 1) && avgTemp > 10) {
+            analyses.push(`📈 Výrazně nadprůměrné zimní teploty (${r(avgTemp)}°C) — teplý vzduch od jihozápadu.`);
+        } else if ((month >= 5 && month <= 7) && avgTemp < 15) {
+            analyses.push(`📉 Podprůměrně chladné léto ${r(avgTemp)}°C — studený vzduch ze severu.`);
+        }
+
+        // Summary (always have at least one analysis)
+        if (analyses.length === 0) {
+            const mainCond = Object.entries(cc).sort((a, b) => b[1] - a[1])[0];
+            const condName = { Clear: 'jasno', Clouds: 'oblačno', Rain: 'déšť', Snow: 'sněžení', Drizzle: 'mrholení', Thunderstorm: 'bouřky', Mist: 'mlha', Fog: 'mlha', Haze: 'opar' }[mainCond[0]] || mainCond[0];
+            analyses.push(`📊 Průměr ${r(avgTemp)}°C, ${condName} v ${mainCond[1]}/${n} městech, tlak ${r(avgPressure)} hPa, vlhkost ${r(avgHumidity)}%.`);
+        }
+
+        return [...alerts, ...warnings, ...analyses];
     }
 }
 
@@ -1287,7 +1430,7 @@ class WeatherUltimate {
                     </div>
 
                     <div class="forecast-chart" id="forecastChart">
-                        <canvas id="tempChart" width="800" height="200"></canvas>
+                        <canvas id="tempChart" height="200"></canvas>
                     </div>
 
                     ${aqiSectionHTML}
@@ -1378,7 +1521,13 @@ class WeatherUltimate {
     drawTemperatureChart(dailyForecasts) {
         const canvas = document.getElementById('tempChart');
         if (!canvas) return;
-        
+
+        // Set canvas width from container for full-width rendering
+        const container = canvas.parentElement;
+        if (container) {
+            canvas.width = container.offsetWidth;
+        }
+
         const ctx = canvas.getContext('2d');
         const width = canvas.width;
         const height = canvas.height;
