@@ -166,6 +166,7 @@ class Weather3DEffects {
     }
 
     connectToWeatherApp() {
+        let retries = 0;
         const check = setInterval(() => {
             if (window.weatherCardEffects) {
                 const orig = window.weatherCardEffects.createCardEffect.bind(window.weatherCardEffects);
@@ -181,6 +182,9 @@ class Weather3DEffects {
                         if (w) this.create3DEffect(card, w);
                     });
                 }, 500);
+            } else if (++retries >= 50) {
+                clearInterval(check);
+                console.warn('3D Effects: 2D effects not available after 5s');
             }
         }, 100);
     }

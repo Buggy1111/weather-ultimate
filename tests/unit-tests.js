@@ -181,10 +181,15 @@ describe('Feature Detection', () => {
     });
 
     it('has all expected keys', () => {
-        const keys = ['indexedDB', 'webGL', 'webShare', 'battery', 'networkInfo', 'vibration', 'geolocation', 'clipboard'];
+        const keys = ['indexedDB', 'webGL', 'battery', 'networkInfo', 'vibration', 'geolocation'];
         keys.forEach(key => {
             expect(typeof features[key]).toBe('boolean');
         });
+    });
+
+    it('removed unused feature flags (webShare, clipboard)', () => {
+        expect(features.webShare).toBe(undefined);
+        expect(features.clipboard).toBe(undefined);
     });
 
     it('indexedDB is available in browser', () => {
@@ -797,6 +802,64 @@ describe('AIPredictions.generateCityPrediction', () => {
         const insights = ai.generateCityPrediction('Test', days, airPollution);
         const hasAir = insights.some(i => i.includes('\u0160patn\u00E1') || i.includes('omezte'));
         expect(hasAir).toBeTruthy();
+    });
+});
+
+// ── StateManager robustness (audit fix) ──────────────────────
+describe('StateManager: Robustness', () => {
+    it('updateStats handles malformed city (missing main)', () => {
+        const sm = new StateManager();
+        sm.state.cities.set('bad', { id: 'bad', weather: [{ main: 'Clear' }] });
+        sm.state.cities.set('good', { id: 'good', main: { temp: 20 }, weather: [{ main: 'Clear' }] });
+        sm.updateStats();
+        expect(sm.state.stats.total).toBe(2);
+        expect(sm.state.stats.avgTemp).toBe(20);
+    });
+
+    it('updateStats handles malformed city (missing weather)', () => {
+        const sm = new StateManager();
+        sm.state.cities.set('bad', { id: 'bad', main: { temp: 10 } });
+        sm.state.cities.set('good', { id: 'good', main: { temp: 20 }, weather: [{ main: 'Clouds' }] });
+        sm.updateStats();
+        expect(sm.state.stats.avgTemp).toBe(20);
+        expect(sm.state.stats.sunnyCount).toBe(0);
+    });
+
+    it('updateStats handles all malformed cities', () => {
+        const sm = new StateManager();
+        sm.state.cities.set('bad1', { id: 'bad1' });
+        sm.state.cities.set('bad2', { id: 'bad2', main: null });
+        sm.updateStats();
+        expect(sm.state.stats.total).toBe(2);
+        expect(sm.state.stats.avgTemp).toBe(0);
+    });
+
+    it('updateStats handles empty temp (null)', () => {
+        const sm = new StateManager();
+        sm.state.cities.set('noTemp', { id: 'noTemp', main: { temp: null }, weather: [{ main: 'Clear' }] });
+        sm.updateStats();
+        expect(sm.state.stats.avgTemp).toBe(0);
+    });
+});
+
+// ── Dead code removal verification ───────────────────────────
+describe('Dead Code Removal', () => {
+    it('animateCardEntrance is removed', () => {
+        expect(typeof window.animateCardEntrance).toBe('undefined');
+    });
+
+    it('shareWeather is removed', () => {
+        expect(typeof window.shareWeather).toBe('undefined');
+    });
+
+    it('PerformanceMonitor is removed', () => {
+        expect(typeof window.PerformanceMonitor).toBe('undefined');
+    });
+
+    it('vibrate utility is defined in app.js (not loaded here)', () => {
+        // vibrate() is in app.js which is not loaded in unit test runner
+        // This test verifies it's NOT in the pure-logic modules (correct separation)
+        expect(typeof window.vibrate).toBe('undefined');
     });
 });
 

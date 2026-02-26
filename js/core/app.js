@@ -65,6 +65,17 @@ class WeatherUltimate {
 
         const isTouchDevice = (navigator.maxTouchPoints ?? 0) > 0;
 
+        // Search suggestion click (event delegation — no listener stacking)
+        searchSuggestions.addEventListener('click', (e) => {
+            const item = e.target.closest('.suggestion-item');
+            if (item) {
+                const name = item.dataset.name;
+                searchInput.value = name;
+                searchSuggestions.classList.remove('search-suggestions--active');
+                this.searchAndAddCity(name);
+            }
+        });
+
         // Close search suggestions on outside click
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-container')) {
@@ -224,33 +235,27 @@ class WeatherUltimate {
             return;
         }
 
-        // Note: suggestion data comes from OpenWeatherMap Geo API (trusted source)
-        const html = suggestions.map(s => `
+        const esc = WeatherHelpers.escapeHTML;
+        const html = suggestions.map(s => {
+            const name = s.local_names?.cs || s.name;
+            return `
             <div class="suggestion-item"
                  data-lat="${s.lat}"
                  data-lon="${s.lon}"
-                 data-name="${s.local_names?.cs || s.name}"
-                 data-country="${s.country}">
+                 data-name="${esc(name)}"
+                 data-country="${esc(s.country)}">
                 <span class="suggestion-item__name">
-                    ${s.local_names?.cs || s.name}
+                    ${esc(name)}
                 </span>
                 <span class="suggestion-item__country">
-                    ${s.state ? `${s.state}, ` : ''}${s.country}
+                    ${s.state ? `${esc(s.state)}, ` : ''}${esc(s.country)}
                 </span>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         container.innerHTML = html;
         container.classList.add('search-suggestions--active');
-
-        container.querySelectorAll('.suggestion-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const name = item.dataset.name;
-                document.getElementById('searchInput').value = name;
-                container.classList.remove('search-suggestions--active');
-                this.searchAndAddCity(name);
-            });
-        });
     }
 
     updateAIPrediction(weatherData) {
@@ -298,7 +303,7 @@ class WeatherUltimate {
         console.log('Card clicked:', cityName);
         vibrate([50]);
 
-        if (lat && lon) {
+        if (!isNaN(lat) && !isNaN(lon)) {
             this.showForecast(cityName, lat, lon);
         }
     }
@@ -345,8 +350,7 @@ class WeatherUltimate {
                 }
             }
 
-            this.state.updateStats();
-            const weatherData = cities.map(c => c);
+            const weatherData = Array.from(this.state.state.cities.values());
             this.updateAIPrediction(weatherData);
 
             console.log('✅ Update complete at', new Date().toLocaleTimeString('cs-CZ'));
@@ -373,7 +377,7 @@ class WeatherUltimate {
     }
 
     updateUI() {
-        console.log('State updated:', this.state.state);
+        // State change handled by specific subscribers (updateStats, etc.)
     }
 }
 
@@ -384,47 +388,3 @@ function vibrate(pattern = [50]) {
     }
 }
 
-async function shareWeather(city, temp, description) {
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                title: `Počasí v ${city}`,
-                text: `${city}: ${temp}°C, ${description}`,
-                url: window.location.href
-            });
-            vibrate([50, 30, 50]);
-        } catch (error) {
-            console.log('Error sharing:', error);
-        }
-    } else {
-        const text = `${city}: ${temp}°C, ${description}`;
-        navigator.clipboard.writeText(text).then(() => {
-            window.weatherApp.showNotification(
-                'Zkopírováno',
-                'Text byl zkopírován do schránky',
-                'success'
-            );
-        });
-    }
-}
-
-function animateCardEntrance(card) {
-    if ('animate' in card) {
-        card.animate([
-            {
-                opacity: 0,
-                transform: 'translateY(50px) scale(0.9) rotateX(10deg)',
-                filter: 'blur(5px)'
-            },
-            {
-                opacity: 1,
-                transform: 'translateY(0) scale(1) rotateX(0)',
-                filter: 'blur(0)'
-            }
-        ], {
-            duration: 600,
-            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-            fill: 'both'
-        });
-    }
-}

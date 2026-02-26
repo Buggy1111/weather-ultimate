@@ -40,12 +40,10 @@ const features = {
             return false;
         }
     })(),
-    webShare: 'share' in navigator,
     battery: 'getBattery' in navigator,
     networkInfo: 'connection' in navigator,
     vibration: 'vibrate' in navigator,
-    geolocation: 'geolocation' in navigator,
-    clipboard: 'clipboard' in navigator
+    geolocation: 'geolocation' in navigator
 };
 
 const urlParams = new URLSearchParams(window.location.search);

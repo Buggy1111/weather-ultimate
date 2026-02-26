@@ -45,8 +45,9 @@ class StateManager {
 
     updateStats() {
         const cities = Array.from(this.state.cities.values());
-        const temps = cities.map(c => c.main.temp);
-        const sunnyCount = cities.filter(c => c.weather[0].main.toLowerCase() === 'clear').length;
+        const validCities = cities.filter(c => c.main?.temp != null && c.weather?.[0]?.main);
+        const temps = validCities.map(c => c.main.temp);
+        const sunnyCount = validCities.filter(c => c.weather[0].main.toLowerCase() === 'clear').length;
 
         this.state.stats = {
             total: cities.length,

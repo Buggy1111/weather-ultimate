@@ -125,6 +125,14 @@ document.addEventListener('keydown', (e) => {
         window.weatherApp?.closeForecastModal();
     }
 
+    if (e.key === 'Enter' || e.key === ' ') {
+        const card = document.activeElement?.closest('.weather-card');
+        if (card && !e.target.closest('button') && !e.target.closest('input')) {
+            e.preventDefault();
+            window.weatherApp?.handleCardClick(card);
+        }
+    }
+
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         const focusedCard = document.activeElement.closest('.weather-card');
         if (focusedCard) {
@@ -263,22 +271,6 @@ function getUserLocationWeather() {
 
 setTimeout(getUserLocationWeather, 2000);
 
-// Image lazy loading
-const imageObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            img.classList.remove('lazy');
-            imageObserver.unobserve(img);
-        }
-    });
-});
-
-document.querySelectorAll('img.lazy').forEach(img => {
-    imageObserver.observe(img);
-});
-
 // Ambient Light Sensor (experimental)
 if ('AmbientLightSensor' in window) {
     try {
@@ -318,25 +310,6 @@ async function requestWakeLock() {
 if (urlParams.get('dashboard') === 'true') {
     requestWakeLock();
 }
-
-// Custom Events
-const weatherEvents = {
-    emit(eventName, detail) {
-        document.dispatchEvent(new CustomEvent(eventName, { detail }));
-    },
-    on(eventName, handler) {
-        document.addEventListener(eventName, handler);
-    }
-};
-
-weatherEvents.on('weatherUpdate', (e) => {
-    console.log('Weather updated:', e.detail);
-});
-
-weatherEvents.on('cityAdded', (e) => {
-    console.log('City added:', e.detail);
-    vibrate([50, 30, 50]);
-});
 
 // Final initialization message
 console.log('✨ Weather Ultimate initialized successfully!');

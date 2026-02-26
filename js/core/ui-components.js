@@ -122,7 +122,6 @@ class UIComponents {
                      data-visibility="${visibility || ''}"
                      data-clouds="${cloudiness != null ? cloudiness : ''}"
                      data-aqi="${airPollution?.list?.[0]?.main?.aqi || ''}"
-                     data-aqi-components='${airPollution?.list?.[0] ? JSON.stringify(airPollution.list[0].components) : ''}'
                      style="--mood-color-1: ${mood.colors[0]}; --mood-color-2: ${mood.colors[1]};"
                      role="listitem"
                      tabindex="0">

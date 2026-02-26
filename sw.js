@@ -3,7 +3,7 @@
  * Cache-first for static assets, network-first for API calls
  */
 
-const CACHE_VERSION = 'weather-ultimate-v2';
+const CACHE_VERSION = 'weather-ultimate-v3';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -36,6 +36,7 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_VERSION)
             .then(cache => cache.addAll(STATIC_ASSETS))
             .then(() => self.skipWaiting())
+            .catch(err => console.error('[SW] Install failed:', err))
     );
 });
 

@@ -710,13 +710,14 @@ class WeatherCardEffects {
     }
 
     connectToWeatherApp() {
-        // Wait for main app to be ready
+        // Wait for main app to be ready (max 50 retries = 5s)
+        let retries = 0;
         const checkApp = setInterval(() => {
             if (window.weatherApp && window.weatherApp.cardEffects === undefined) {
                 window.weatherApp.cardEffects = this;
                 clearInterval(checkApp);
                 console.log('🔗 Weather Effects connected to main app');
-                
+
                 // Auto-apply effects to existing cards
                 setTimeout(() => {
                     document.querySelectorAll('.weather-card').forEach(card => {
@@ -726,6 +727,9 @@ class WeatherCardEffects {
                         }
                     });
                 }, 1000);
+            } else if (++retries >= 50) {
+                clearInterval(checkApp);
+                console.warn('Weather Effects: main app not available after 5s');
             }
         }, 100);
     }

@@ -316,7 +316,7 @@ class ForecastManager {
         const allTemps = dailyForecasts.flatMap(d => [d.minTemp, d.maxTemp]);
         const minTemp = Math.min(...allTemps) - 2;
         const maxTemp = Math.max(...allTemps) + 2;
-        const tempRange = maxTemp - minTemp;
+        const tempRange = Math.max(maxTemp - minTemp, 1);
 
         // Grid
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';

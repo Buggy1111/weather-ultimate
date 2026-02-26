@@ -360,13 +360,12 @@ class WeatherSounds {
                 card.addEventListener('mouseenter', card._soundEnter);
                 card.addEventListener('mouseleave', card._soundLeave);
                 
-                // Touch support
-                card.addEventListener('touchstart', (e) => {
+                // Touch support (passive — does not block scroll)
+                card.addEventListener('touchstart', () => {
                     if (!this.enabled) return;
-                    e.preventDefault();
                     card._soundEnter();
                     setTimeout(() => card._soundLeave(), 3000);
-                });
+                }, { passive: true });
             };
             
             document.querySelectorAll('.weather-card').forEach(setupCard);
@@ -390,8 +389,6 @@ class WeatherSounds {
         } else {
             document.addEventListener('DOMContentLoaded', setupHover);
         }
-        
-        setTimeout(setupHover, 2000);
         
         // Load saved volume
         if (window.localStorage) {

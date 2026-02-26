@@ -498,8 +498,9 @@
     padding-bottom: 0.5rem;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
     touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
 }
 
 .hourly-forecast__scroll::-webkit-scrollbar { height: 6px; }
