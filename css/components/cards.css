@@ -543,24 +543,19 @@
     display: inline-block;
 }
 
-/* Sun Info */
-.sun-info {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
+/* Sun Arc */
+.sun-arc-container {
     background: rgba(255, 255, 255, 0.03);
     border-radius: 12px;
-    padding: clamp(0.6rem, 1vw, 1rem);
+    padding: clamp(0.4rem, 1vw, 0.75rem);
     margin: 0.5rem 0 1rem 0;
     border: 1px solid rgba(255, 255, 255, 0.05);
     position: relative;
     overflow: hidden;
     z-index: 10;
-    gap: 0.5rem;
 }
 
-.sun-info::before {
+.sun-arc-container::before {
     content: '';
     position: absolute;
     top: 0;
@@ -570,47 +565,12 @@
     background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), rgba(255, 94, 77, 0.3), transparent);
 }
 
-.sun-info__item { display: flex; align-items: center; gap: 0.75rem; }
-.sun-info__icon { font-size: 2rem; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)); }
-.sun-info__data { display: flex; flex-direction: column; }
-.sun-info__label { font-size: var(--fs-xs); color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.05em; }
-.sun-info__time { font-size: var(--fs-base); font-weight: 600; color: rgba(255, 255, 255, 0.9); }
-
-.sun-info__separator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    padding: 0 1rem;
-}
-
-.sun-info__separator::before,
-.sun-info__separator::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 40px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-}
-
-.sun-info__separator::before { left: -40px; }
-.sun-info__separator::after { right: -40px; }
-
-.day-length {
-    font-size: var(--fs-sm);
-    font-weight: 700;
-    color: rgba(255, 215, 0, 0.9);
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-}
-
-.day-length-label {
-    font-size: var(--fs-xs);
-    color: rgba(255, 255, 255, 0.4);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 0.25rem;
+.sun-arc {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+    overflow: visible;
 }
 
 /* Weather Mood */

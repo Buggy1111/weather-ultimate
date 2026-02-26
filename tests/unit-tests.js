@@ -1016,5 +1016,71 @@ describe('BackgroundManager: Gradient Selection', () => {
     });
 });
 
+// ── SunArc: SVG Sun Position ─────────────────────────────────
+describe('WeatherHelpers.generateSunArc', () => {
+    it('function exists', () => {
+        expect(typeof WeatherHelpers.generateSunArc).toBe('function');
+    });
+
+    it('returns SVG string', () => {
+        const now = Math.floor(Date.now() / 1000);
+        const svg = WeatherHelpers.generateSunArc(now - 3600, now + 3600, 0);
+        expect(typeof svg).toBe('string');
+        expect(svg).toContain('<svg');
+        expect(svg).toContain('</svg>');
+    });
+
+    it('shows sun above horizon during day', () => {
+        const now = Math.floor(Date.now() / 1000);
+        const svg = WeatherHelpers.generateSunArc(now - 3600, now + 3600, 0);
+        expect(svg).toContain('sun-arc__dot');
+    });
+
+    it('includes sunrise and sunset times', () => {
+        const sunrise = Math.floor(Date.now() / 1000) - 7200;
+        const sunset = sunrise + 43200; // 12h day
+        const svg = WeatherHelpers.generateSunArc(sunrise, sunset, 0);
+        expect(svg).toContain('sun-arc__time');
+    });
+
+    it('includes day length', () => {
+        const sunrise = Math.floor(Date.now() / 1000) - 7200;
+        const sunset = sunrise + 43200;
+        const svg = WeatherHelpers.generateSunArc(sunrise, sunset, 0);
+        expect(svg).toContain('12h');
+    });
+
+    it('calculates sun progress correctly at midpoint', () => {
+        const progress = WeatherHelpers.getSunProgress(100, 200, 150);
+        expect(progress).toBe(0.5);
+    });
+
+    it('calculates sun progress 0 at sunrise', () => {
+        const progress = WeatherHelpers.getSunProgress(100, 200, 100);
+        expect(progress).toBe(0);
+    });
+
+    it('calculates sun progress 1 at sunset', () => {
+        const progress = WeatherHelpers.getSunProgress(100, 200, 200);
+        expect(progress).toBe(1);
+    });
+
+    it('clamps sun progress below 0 to -1', () => {
+        const progress = WeatherHelpers.getSunProgress(100, 200, 50);
+        expect(progress).toBeLessThan(0);
+    });
+
+    it('clamps sun progress above 1 to >1', () => {
+        const progress = WeatherHelpers.getSunProgress(100, 200, 250);
+        expect(progress).toBeGreaterThan(1);
+    });
+
+    it('handles timezone offset', () => {
+        const now = Math.floor(Date.now() / 1000);
+        const svg = WeatherHelpers.generateSunArc(now - 3600, now + 3600, 3600);
+        expect(svg).toContain('<svg');
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();

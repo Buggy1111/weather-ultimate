@@ -136,5 +136,52 @@ const WeatherHelpers = {
         else if (value > info.mod) level = 'moderate';
         else if (value > info.fair) level = 'fair';
         return { value: value.toFixed(1), unit: info.unit, level };
+    },
+
+    getSunProgress(sunrise, sunset, now) {
+        return (now - sunrise) / (sunset - sunrise);
+    },
+
+    generateSunArc(sunriseUtc, sunsetUtc, timezoneOffset) {
+        const now = Math.floor(Date.now() / 1000);
+        const progress = this.getSunProgress(sunriseUtc, sunsetUtc, now);
+
+        const riseLocal = new Date((sunriseUtc + timezoneOffset) * 1000);
+        const setLocal = new Date((sunsetUtc + timezoneOffset) * 1000);
+        const riseStr = riseLocal.toISOString().substring(11, 16);
+        const setStr = setLocal.toISOString().substring(11, 16);
+
+        const dayLen = sunsetUtc - sunriseUtc;
+        const h = Math.floor(dayLen / 3600);
+        const m = Math.floor((dayLen % 3600) / 60);
+
+        const W = 240, H = 130;
+        const cx = 120, cy = 95, rx = 95, ry = 65;
+        const arcPath = `M ${cx - rx},${cy} A ${rx},${ry} 0 0,1 ${cx + rx},${cy}`;
+        const arcLen = 271;
+
+        const cp = Math.max(0, Math.min(1, progress));
+        const angle = Math.PI * (1 - cp);
+        const sunX = (cx + rx * Math.cos(angle)).toFixed(1);
+        const sunY = (cy - ry * Math.sin(angle)).toFixed(1);
+        const isDay = progress >= 0 && progress <= 1;
+        const dashLen = Math.round(cp * arcLen);
+
+        let svg = `<svg class="sun-arc" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+        svg += `<line class="sun-arc__horizon" x1="${cx - rx}" y1="${cy}" x2="${cx + rx}" y2="${cy}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
+        svg += `<path class="sun-arc__path" d="${arcPath}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="4,4"/>`;
+        if (isDay) {
+            svg += `<path class="sun-arc__progress" d="${arcPath}" fill="none" stroke="rgba(251,191,36,0.6)" stroke-width="2.5" stroke-dasharray="${dashLen},${arcLen}"/>`;
+            svg += `<circle class="sun-arc__glow" cx="${sunX}" cy="${sunY}" r="10" fill="rgba(251,191,36,0.15)"/>`;
+            svg += `<circle class="sun-arc__dot" cx="${sunX}" cy="${sunY}" r="5" fill="#fbbf24"/>`;
+        }
+        svg += `<text class="sun-arc__time sun-arc__time--rise" x="${cx - rx}" y="${cy + 18}" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">${riseStr}</text>`;
+        svg += `<text class="sun-arc__time sun-arc__time--set" x="${cx + rx}" y="${cy + 18}" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">${setStr}</text>`;
+        svg += `<text class="sun-arc__label" x="${cx}" y="${cy + 18}" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10">${h}h ${m}m</text>`;
+        svg += `<text class="sun-arc__icon" x="${cx - rx - 1}" y="${cy - 5}" text-anchor="middle" font-size="13">🌅</text>`;
+        svg += `<text class="sun-arc__icon" x="${cx + rx + 1}" y="${cy - 5}" text-anchor="middle" font-size="13">🌇</text>`;
+        svg += `</svg>`;
+
+        return svg;
     }
 };

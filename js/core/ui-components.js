@@ -204,25 +204,8 @@ class UIComponents {
 
                 ${hourlyForecastHTML}
 
-                <div class="sun-info">
-                    <div class="sun-info__item">
-                        <span class="sun-info__icon">🌅</span>
-                        <div class="sun-info__data">
-                            <span class="sun-info__label">Východ</span>
-                            <span class="sun-info__time">${sunriseTime}</span>
-                        </div>
-                    </div>
-                    <div class="sun-info__separator">
-                        <span class="day-length">${hours}h ${minutes}m</span>
-                        <span class="day-length-label">délka dne</span>
-                    </div>
-                    <div class="sun-info__item">
-                        <span class="sun-info__icon">🌇</span>
-                        <div class="sun-info__data">
-                            <span class="sun-info__label">Západ</span>
-                            <span class="sun-info__time">${sunsetTime}</span>
-                        </div>
-                    </div>
+                <div class="sun-arc-container">
+                    ${WeatherHelpers.generateSunArc(data.sys.sunrise, data.sys.sunset, timezoneOffset)}
                 </div>
 
                 <div class="weather-mood">
