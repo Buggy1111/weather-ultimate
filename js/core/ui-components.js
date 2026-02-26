@@ -235,14 +235,35 @@ class UIComponents {
     static skeletonCard() {
         return `
             <div class="weather-card skeleton">
-                <div class="skeleton" style="height: 32px; width: 60%; margin-bottom: 1rem;"></div>
-                <div class="skeleton" style="height: 64px; width: 40%; margin-bottom: 1rem;"></div>
-                <div class="skeleton" style="height: 24px; width: 80%; margin-bottom: 1.5rem;"></div>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-                    <div class="skeleton" style="height: 80px;"></div>
-                    <div class="skeleton" style="height: 80px;"></div>
-                    <div class="skeleton" style="height: 80px;"></div>
+                <div class="skeleton__header">
+                    <div class="skeleton skeleton--line" style="width:55%;height:22px"></div>
+                    <div class="skeleton skeleton--line" style="width:30%;height:14px;margin-top:0.4rem"></div>
+                    <div class="skeleton skeleton--line" style="width:40%;height:14px;margin-top:0.4rem"></div>
                 </div>
+                <div class="skeleton__temp" style="display:flex;align-items:center;gap:1rem;margin:1.25rem 0">
+                    <div class="skeleton skeleton--circle" style="width:72px;height:72px"></div>
+                    <div class="skeleton skeleton--line" style="width:50px;height:50px;border-radius:8px"></div>
+                </div>
+                <div class="skeleton skeleton--line" style="width:65%;height:16px;margin-bottom:1rem"></div>
+                <div class="skeleton__details" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1rem">
+                    <div class="skeleton" style="height:70px;border-radius:8px"></div>
+                    <div class="skeleton" style="height:70px;border-radius:8px"></div>
+                    <div class="skeleton" style="height:70px;border-radius:8px"></div>
+                    <div class="skeleton" style="height:70px;border-radius:8px"></div>
+                    <div class="skeleton" style="height:70px;border-radius:8px"></div>
+                    <div class="skeleton" style="height:70px;border-radius:8px"></div>
+                </div>
+                <div class="skeleton__hourly" style="display:flex;gap:0.5rem;overflow:hidden;margin-bottom:1rem">
+                    <div class="skeleton" style="min-width:56px;height:80px;border-radius:8px"></div>
+                    <div class="skeleton" style="min-width:56px;height:80px;border-radius:8px"></div>
+                    <div class="skeleton" style="min-width:56px;height:80px;border-radius:8px"></div>
+                    <div class="skeleton" style="min-width:56px;height:80px;border-radius:8px"></div>
+                    <div class="skeleton" style="min-width:56px;height:80px;border-radius:8px"></div>
+                </div>
+                <div class="skeleton__sun">
+                    <div class="skeleton" style="height:80px;border-radius:12px;margin-bottom:0.75rem"></div>
+                </div>
+                <div class="skeleton skeleton--line" style="width:100%;height:44px;border-radius:12px"></div>
             </div>
         `;
     }

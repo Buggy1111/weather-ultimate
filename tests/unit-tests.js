@@ -1172,5 +1172,40 @@ describe('WeatherHelpers.generateTempBar', () => {
     });
 });
 
+// ── Skeleton Loading ─────────────────────────────────────────
+describe('UIComponents.skeletonCard', () => {
+    it('returns string', () => {
+        expect(typeof UIComponents.skeletonCard()).toBe('string');
+    });
+
+    it('has weather-card class', () => {
+        expect(UIComponents.skeletonCard()).toContain('weather-card');
+    });
+
+    it('has skeleton class', () => {
+        expect(UIComponents.skeletonCard()).toContain('skeleton');
+    });
+
+    it('has header placeholder', () => {
+        expect(UIComponents.skeletonCard()).toContain('skeleton__header');
+    });
+
+    it('has temp placeholder', () => {
+        expect(UIComponents.skeletonCard()).toContain('skeleton__temp');
+    });
+
+    it('has details grid placeholder', () => {
+        expect(UIComponents.skeletonCard()).toContain('skeleton__details');
+    });
+
+    it('has hourly row placeholder', () => {
+        expect(UIComponents.skeletonCard()).toContain('skeleton__hourly');
+    });
+
+    it('has sun arc placeholder', () => {
+        expect(UIComponents.skeletonCard()).toContain('skeleton__sun');
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();
