@@ -183,5 +183,21 @@ const WeatherHelpers = {
         svg += `</svg>`;
 
         return svg;
+    },
+
+    getTempColor(temp) {
+        const clamped = Math.max(-20, Math.min(40, temp));
+        const hue = 210 - ((clamped + 20) / 60) * 210;
+        return `hsl(${Math.round(hue)}, 80%, 60%)`;
+    },
+
+    generateTempBar(dayMin, dayMax, weekMin, weekMax) {
+        const range = weekMax - weekMin || 1;
+        const leftPct = ((dayMin - weekMin) / range) * 100;
+        const widthPct = Math.max(2, ((dayMax - dayMin) / range) * 100);
+        const startColor = this.getTempColor(dayMin);
+        const endColor = this.getTempColor(dayMax);
+
+        return `<div class="temp-bar"><div class="temp-bar__fill" style="left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;background:linear-gradient(90deg,${startColor},${endColor})"></div></div>`;
     }
 };

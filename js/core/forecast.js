@@ -196,7 +196,12 @@ class ForecastManager {
                     ${aiSectionHTML}
 
                     <div class="forecast-days">
-                        ${dailyForecasts.map(day => this.createDayForecast(day)).join('')}
+                        ${(() => {
+                            const allTemps = dailyForecasts.flatMap(d => [d.minTemp, d.maxTemp]);
+                            const wMin = Math.min(...allTemps);
+                            const wMax = Math.max(...allTemps);
+                            return dailyForecasts.map(day => this.createDayForecast(day, wMin, wMax)).join('');
+                        })()}
                     </div>
 
                     <div class="forecast-chart" id="forecastChart">
@@ -232,7 +237,7 @@ class ForecastManager {
         });
     }
 
-    createDayForecast(day) {
+    createDayForecast(day, weekMin = null, weekMax = null) {
         const dayName = day.date.toLocaleDateString('cs-CZ', { weekday: 'long' });
         const dateStr = day.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
         const emoji = WeatherHelpers.getWeatherEmoji(day.weather.main.toLowerCase(), day.weatherId);
@@ -252,6 +257,7 @@ class ForecastManager {
 
                 <div class="forecast-day-card__temps">
                     <span class="temp-max">${day.maxTemp}°</span>
+                    ${weekMin != null && weekMax != null ? WeatherHelpers.generateTempBar(day.minTemp, day.maxTemp, weekMin, weekMax) : ''}
                     <span class="temp-min">${day.minTemp}°</span>
                 </div>
 

@@ -1082,5 +1082,95 @@ describe('WeatherHelpers.generateSunArc', () => {
     });
 });
 
+// ── Temperature Bars: Visual temperature range ───────────────
+describe('WeatherHelpers.getTempColor', () => {
+    it('function exists', () => {
+        expect(typeof WeatherHelpers.getTempColor).toBe('function');
+    });
+
+    it('returns hsl string', () => {
+        expect(WeatherHelpers.getTempColor(20)).toContain('hsl');
+    });
+
+    it('cold temps produce blue hue (>180)', () => {
+        const color = WeatherHelpers.getTempColor(-15);
+        const hue = parseInt(color.match(/hsl\((\d+)/)[1]);
+        expect(hue).toBeGreaterThan(180);
+    });
+
+    it('warm temps produce red/orange hue (<60)', () => {
+        const color = WeatherHelpers.getTempColor(35);
+        const hue = parseInt(color.match(/hsl\((\d+)/)[1]);
+        expect(hue).toBeLessThan(60);
+    });
+
+    it('moderate temps produce green/yellow hue (60-150)', () => {
+        const color = WeatherHelpers.getTempColor(15);
+        const hue = parseInt(color.match(/hsl\((\d+)/)[1]);
+        expect(hue).toBeGreaterThan(60);
+        expect(hue).toBeLessThan(150);
+    });
+
+    it('clamps below -20', () => {
+        const a = WeatherHelpers.getTempColor(-20);
+        const b = WeatherHelpers.getTempColor(-40);
+        expect(a).toBe(b);
+    });
+
+    it('clamps above 40', () => {
+        const a = WeatherHelpers.getTempColor(40);
+        const b = WeatherHelpers.getTempColor(60);
+        expect(a).toBe(b);
+    });
+});
+
+describe('WeatherHelpers.generateTempBar', () => {
+    it('function exists', () => {
+        expect(typeof WeatherHelpers.generateTempBar).toBe('function');
+    });
+
+    it('returns HTML with temp-bar class', () => {
+        const html = WeatherHelpers.generateTempBar(5, 15, -5, 25);
+        expect(html).toContain('temp-bar');
+    });
+
+    it('includes temp-bar__fill element', () => {
+        const html = WeatherHelpers.generateTempBar(5, 15, -5, 25);
+        expect(html).toContain('temp-bar__fill');
+    });
+
+    it('calculates correct left position', () => {
+        const html = WeatherHelpers.generateTempBar(5, 15, -5, 25);
+        expect(html).toContain('left:33');
+    });
+
+    it('calculates correct width', () => {
+        const html = WeatherHelpers.generateTempBar(5, 15, -5, 25);
+        expect(html).toContain('width:33');
+    });
+
+    it('full range bar spans 100%', () => {
+        const html = WeatherHelpers.generateTempBar(0, 30, 0, 30);
+        expect(html).toContain('left:0');
+        expect(html).toContain('width:100');
+    });
+
+    it('uses gradient with hsl colors', () => {
+        const html = WeatherHelpers.generateTempBar(5, 25, 0, 30);
+        expect(html).toContain('linear-gradient');
+        expect(html).toContain('hsl');
+    });
+
+    it('handles equal min and max gracefully', () => {
+        const html = WeatherHelpers.generateTempBar(15, 15, 0, 30);
+        expect(html).toContain('temp-bar');
+    });
+
+    it('handles equal week range', () => {
+        const html = WeatherHelpers.generateTempBar(20, 20, 20, 20);
+        expect(html).toContain('temp-bar');
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();
