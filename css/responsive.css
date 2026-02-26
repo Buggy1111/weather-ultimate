@@ -40,23 +40,29 @@
 /* All Mobiles (< 768px) */
 @media (max-width: 767px) {
     .hero { min-height: auto; padding: clamp(1.5rem, 4vw, 2.5rem) 0; }
-    .hero__subtitle { margin-bottom: 1rem; }
+    .hero__subtitle { margin-bottom: 1rem; font-size: var(--fs-sm); }
     .weather-grid { grid-template-columns: 1fr; }
     .quick-stats { grid-template-columns: repeat(2, 1fr); }
     .notification { left: 0.5rem; right: 0.5rem; bottom: 0.5rem; max-width: none; }
-    .forecast-modal { padding: 0.75rem; }
-    .forecast-modal__content { padding: 1.25rem; max-height: calc(100vh - 1.5rem); border-radius: 16px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+    .forecast-modal { padding: 0.5rem; }
+    .forecast-modal__content {
+        padding: 1.25rem;
+        max-height: calc(100vh - 1rem);
+        max-height: calc(100dvh - 1rem);
+        border-radius: 16px;
+        overscroll-behavior: contain;
+    }
     .forecast-modal__title { font-size: var(--fs-xl); margin-bottom: 1rem; }
-    .forecast-days { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+    .forecast-days { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
     .forecast-day-card { padding: 0.75rem 0.5rem; }
     .forecast-day-card__icon { font-size: 2rem; margin: 0.5rem 0; }
     .forecast-day-card__temps { gap: 0.5rem; font-size: var(--fs-base); }
-    #tempChart { height: 200px; }
+    #tempChart { height: 180px; }
     .sun-info__icon { font-size: 1.5rem; }
-    /* Sound UI handled in sounds.js mobile media query */
     #debug-panel { bottom: 60px !important; left: 10px !important; font-size: 10px !important; min-width: 150px !important; }
     .weather-card__main { margin-bottom: 1rem; }
     .ai-insights { padding: 1rem; border-radius: 16px; margin-bottom: 1rem; }
+    .search-input { font-size: 16px; } /* prevents iOS auto-zoom on focus */
 }
 
 /* Mobile Landscape */
@@ -140,11 +146,12 @@
     .stat-card__icon { font-size: 3rem; margin-bottom: 1rem; }
 }
 
-/* Performance Optimizations */
+/* Performance — reduce GPU work on mobile */
 @media (max-width: 768px) {
-    #particle-canvas { opacity: 0.3; }
+    #particle-canvas { opacity: 0.2; }
     .weather-card:hover { transform: none !important; }
-    .weather-3d-container { opacity: 0.5; }
+    .weather-3d-container { display: none !important; }
+    .orb { display: none; }
 }
 
 /* Touch Device Optimizations */
@@ -158,13 +165,29 @@
         transform-style: flat !important;
         perspective: none !important;
         will-change: auto !important;
-        overflow: visible !important;
+        overflow: hidden;
     }
     .weather-card::before { display: none; }
     .weather-card.rain-effect::before { display: none; }
-    .hourly-forecast__scroll { -webkit-overflow-scrolling: touch; touch-action: pan-x; overflow-x: scroll; }
-    .forecast-button { padding: 1rem 1.25rem; font-size: var(--fs-base); cursor: pointer; touch-action: manipulation; }
-    .search-button { padding: 1.25rem 1.75rem; }
+    .hourly-forecast__scroll {
+        touch-action: pan-x;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+    }
+    .forecast-button {
+        padding: 1rem 1.25rem;
+        min-height: 48px;
+        font-size: var(--fs-base);
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+    .forecast-modal__close {
+        width: 48px;
+        height: 48px;
+    }
+    .search-button { padding: 1.25rem 1.75rem; min-height: 48px; }
+    .suggestion-item { padding: 1rem 1.5rem; min-height: 48px; }
 }
 
 /* Fallback for browsers without hover media query */
@@ -173,7 +196,7 @@
     .weather-card.rain-effect {
         transform-style: flat !important;
         perspective: none !important;
-        overflow: visible !important;
+        overflow: hidden;
     }
     .weather-card:hover { transform: none !important; }
     .weather-card::before { display: none; }

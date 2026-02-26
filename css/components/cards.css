@@ -494,11 +494,12 @@
     display: flex;
     gap: 0.75rem;
     overflow-x: auto;
+    overflow-y: hidden;
     padding-bottom: 0.5rem;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-    -webkit-overflow-scrolling: touch;
     scroll-snap-type: x mandatory;
+    touch-action: pan-x;
 }
 
 .hourly-forecast__scroll::-webkit-scrollbar { height: 6px; }

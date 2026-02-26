@@ -12,7 +12,11 @@ html {
     font-size: 16px;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
-    zoom: 0.75;
+}
+
+/* zoom only on larger screens — on mobile 0.75 makes everything unreadably small */
+@media (min-width: 768px) {
+    html { zoom: 0.75; }
 }
 
 body {

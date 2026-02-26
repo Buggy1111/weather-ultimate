@@ -588,6 +588,16 @@ class ParticleSystem {
         this.particles = [];
         this.mouseX = 0;
         this.mouseY = 0;
+        this.rafId = null;
+
+        // Skip on mobile — saves battery & prevents scroll jank
+        const isMobile = window.matchMedia('(max-width: 768px)').matches
+            || (navigator.maxTouchPoints ?? 0) > 0;
+        if (isMobile) {
+            canvas.style.display = 'none';
+            return;
+        }
+
         this.init();
     }
 
@@ -645,22 +655,25 @@ class ParticleSystem {
             this.ctx.fillStyle = `rgba(102, 126, 234, ${particle.opacity})`;
             this.ctx.fill();
 
-            this.particles.slice(index + 1).forEach(otherParticle => {
-                const dx = particle.x - otherParticle.x;
-                const dy = particle.y - otherParticle.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+            // Connect nearby particles — use squared distance to avoid sqrt
+            for (let j = index + 1; j < this.particles.length; j++) {
+                const other = this.particles[j];
+                const dx = particle.x - other.x;
+                const dy = particle.y - other.y;
+                const distSq = dx * dx + dy * dy;
 
-                if (distance < 150) {
+                if (distSq < 22500) { // 150²
+                    const dist = Math.sqrt(distSq);
                     this.ctx.beginPath();
                     this.ctx.moveTo(particle.x, particle.y);
-                    this.ctx.lineTo(otherParticle.x, otherParticle.y);
-                    this.ctx.strokeStyle = `rgba(102, 126, 234, ${0.1 * (1 - distance / 150)})`;
+                    this.ctx.lineTo(other.x, other.y);
+                    this.ctx.strokeStyle = `rgba(102, 126, 234, ${0.1 * (1 - dist / 150)})`;
                     this.ctx.stroke();
                 }
-            });
+            }
         });
 
-        requestAnimationFrame(() => this.animate());
+        this.rafId = requestAnimationFrame(() => this.animate());
     }
 }
 
@@ -1080,7 +1093,7 @@ class UIComponents {
             if (weatherId >= 520 && weatherId < 600) return '🌧️';  // shower rain
             if (weatherId === 600) return '🌨️';  // light snow
             if (weatherId === 601) return '❄️';   // snow
-            if (weatherId >= 602) return '🌨️';   // heavy snow / sleet
+            if (weatherId >= 602 && weatherId < 700) return '🌨️';   // heavy snow / sleet
             if (weatherId >= 700 && weatherId < 800) return '🌫️';  // atmosphere (mist/fog/haze)
             if (weatherId === 800) return '☀️';   // clear sky
             if (weatherId === 801) return '🌤️';   // few clouds
@@ -1195,37 +1208,38 @@ class WeatherUltimate {
         });
 
         // Detect touch device — on touch, only forecast button opens modal (not card body)
-        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const isTouchDevice = (navigator.maxTouchPoints ?? 0) > 0;
 
+        // Close search suggestions on outside click (works on both mobile & desktop)
         document.addEventListener('click', (e) => {
-            // Close search suggestions
             if (!e.target.closest('.search-container')) {
                 searchSuggestions.classList.remove('search-suggestions--active');
             }
-
-            // Card body click → open forecast (desktop only)
-            // On mobile, touching the card to scroll must not open the modal
-            if (isTouchDevice) return;
-
-            const card = e.target.closest('.weather-card');
-            if (card &&
-                !e.target.closest('.forecast-button') &&
-                !e.target.closest('.hourly-forecast') &&
-                !e.target.closest('.hourly-item')) {
-                this.handleCardClick(card);
-            }
         });
 
-        document.addEventListener('mousemove', (e) => {
-            const card = e.target.closest('.weather-card');
-            if (card) {
-                const rect = card.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                card.style.setProperty('--mouse-x', `${x}%`);
-                card.style.setProperty('--mouse-y', `${y}%`);
-            }
-        });
+        // Card body click → open forecast (desktop only)
+        if (!isTouchDevice) {
+            document.addEventListener('click', (e) => {
+                const card = e.target.closest('.weather-card');
+                if (card &&
+                    !e.target.closest('.forecast-button') &&
+                    !e.target.closest('.hourly-forecast') &&
+                    !e.target.closest('.hourly-item')) {
+                    this.handleCardClick(card);
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                const card = e.target.closest('.weather-card');
+                if (card) {
+                    const rect = card.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    card.style.setProperty('--mouse-x', `${x}%`);
+                    card.style.setProperty('--mouse-y', `${y}%`);
+                }
+            });
+        }
     }
 
     async loadDefaultCities() {
@@ -1655,7 +1669,12 @@ class WeatherUltimate {
         
         // Show modal with animation + lock scroll
         const modal = document.getElementById('forecast-modal');
+        this._savedScrollY = window.scrollY;
         document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${this._savedScrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
         requestAnimationFrame(() => {
             modal.classList.add('forecast-modal--show');
         });
@@ -1863,6 +1882,14 @@ class WeatherUltimate {
         if (modal) {
             modal.classList.remove('forecast-modal--show');
             document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            if (this._savedScrollY != null) {
+                window.scrollTo(0, this._savedScrollY);
+                this._savedScrollY = null;
+            }
             setTimeout(() => modal.remove(), 300);
         }
     }
