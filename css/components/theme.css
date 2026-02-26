@@ -51,6 +51,12 @@
     opacity: 0.08;
 }
 
+[data-theme="light"] .weather-3d-container {
+    filter: invert(1) hue-rotate(180deg);
+    mix-blend-mode: multiply;
+    opacity: 0.45;
+}
+
 /* Hero */
 [data-theme="light"] .hero__title-word {
     background: linear-gradient(135deg, #4338ca 0%, #7c3aed 25%, #a855f7 50%, #3b82f6 75%, #4338ca 100%);
@@ -305,6 +311,26 @@
     background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.3), rgba(249, 115, 22, 0.3), transparent);
 }
 
+[data-theme="light"] .sun-arc__horizon {
+    stroke: rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme="light"] .sun-arc__path {
+    stroke: rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] .sun-arc__progress {
+    stroke: rgba(217, 119, 6, 0.7) !important;
+}
+
+[data-theme="light"] .sun-arc__time {
+    fill: #334155 !important;
+}
+
+[data-theme="light"] .sun-arc__label {
+    fill: #64748b !important;
+}
+
 /* Precipitation Timeline */
 [data-theme="light"] .precip-timeline {
     background: rgba(0, 0, 0, 0.02);
@@ -331,6 +357,10 @@
 
 [data-theme="light"] .temp-trend__time {
     fill: #94a3b8;
+}
+
+[data-theme="light"] .temp-trend polyline {
+    stroke: rgba(0, 0, 0, 0.35) !important;
 }
 
 /* Activity Tags */
