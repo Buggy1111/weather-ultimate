@@ -1207,5 +1207,33 @@ describe('UIComponents.skeletonCard', () => {
     });
 });
 
+// ── CarouselManager: Mobile Swipe ────────────────────────────
+describe('CarouselManager', () => {
+    it('class exists', () => {
+        expect(typeof CarouselManager).toBe('function');
+    });
+
+    it('checkMobile returns boolean', () => {
+        const cm = new CarouselManager('#weatherGrid', '#carouselPagination');
+        expect(typeof cm.checkMobile()).toBe('boolean');
+    });
+
+    it('currentIndex starts at 0', () => {
+        const cm = new CarouselManager('#weatherGrid', '#carouselPagination');
+        expect(cm.currentIndex).toBe(0);
+    });
+
+    it('scrollToCard updates currentIndex', () => {
+        const cm = new CarouselManager('#weatherGrid', '#carouselPagination');
+        cm.scrollToCard(3);
+        expect(cm.currentIndex).toBe(3);
+    });
+
+    it('getCardCount returns number', () => {
+        const cm = new CarouselManager('#weatherGrid', '#carouselPagination');
+        expect(typeof cm.getCardCount()).toBe('number');
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();

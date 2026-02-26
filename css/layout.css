@@ -69,3 +69,33 @@
     margin-bottom: 4rem;
     padding-bottom: 4rem;
 }
+
+/* Carousel Pagination */
+.carousel-pagination {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0 2rem;
+}
+
+@media (max-width: 767px) {
+    .carousel-pagination { display: flex; }
+}
+
+.carousel-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-dot--active {
+    width: 28px;
+    border-radius: 5px;
+    background: rgba(102, 126, 234, 0.8);
+}

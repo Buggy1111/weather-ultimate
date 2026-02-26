@@ -13,6 +13,7 @@ class WeatherUltimate {
         this.aiEngine = new AIPredictions();
         this.forecastManager = new ForecastManager(this);
         this.backgroundManager = typeof BackgroundManager !== 'undefined' ? new BackgroundManager() : null;
+        this.carousel = typeof CarouselManager !== 'undefined' ? new CarouselManager('#weatherGrid', '#carouselPagination') : null;
         this.updateInterval = null;
         this.initializeApp();
     }
@@ -166,6 +167,7 @@ class WeatherUltimate {
 
             const weatherData = validResults.map(r => r.data);
             this.updateAIPrediction(weatherData);
+            if (this.carousel) this.carousel.refresh();
 
         } catch (error) {
             this.showNotification('Chyba', 'Nepodařilo se načíst počasí', 'error');
@@ -224,6 +226,7 @@ class WeatherUltimate {
                 }
             }, 100);
 
+            if (this.carousel) this.carousel.refresh();
             this.showNotification('Úspěch', `Město ${city.name} bylo přidáno`, 'success');
 
         } catch (error) {
