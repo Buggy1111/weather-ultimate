@@ -26,5 +26,8 @@
 /* Utilities & Accessibility */
 @import url('./utilities.css');
 
+/* Theme (Light/Dark) */
+@import url('./components/theme.css');
+
 /* Responsive Breakpoints */
 @import url('./responsive.css');

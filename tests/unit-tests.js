@@ -1294,5 +1294,43 @@ describe('WeatherHelpers.getActivitySuggestions', () => {
     });
 });
 
+// ── ThemeManager: Light/Dark Mode ─────────────────────────────
+describe('ThemeManager', () => {
+    it('class exists', () => {
+        expect(typeof ThemeManager).toBe('function');
+    });
+
+    it('getTheme returns dark or light', () => {
+        const tm = new ThemeManager();
+        const theme = tm.getTheme();
+        expect(theme === 'dark' || theme === 'light').toBeTruthy();
+    });
+
+    it('setTheme updates document attribute', () => {
+        const tm = new ThemeManager();
+        tm.setTheme('light');
+        expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+        tm.setTheme('dark');
+        expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    });
+
+    it('toggle switches theme', () => {
+        const tm = new ThemeManager();
+        tm.setTheme('dark');
+        tm.toggle();
+        expect(tm.getTheme()).toBe('light');
+        tm.toggle();
+        expect(tm.getTheme()).toBe('dark');
+    });
+
+    it('persists to localStorage', () => {
+        const tm = new ThemeManager();
+        tm.setTheme('light');
+        expect(localStorage.getItem('weather-theme')).toBe('light');
+        tm.setTheme('dark');
+        expect(localStorage.getItem('weather-theme')).toBe('dark');
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();

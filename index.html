@@ -54,6 +54,9 @@
     <div class="orb orb-3"></div>
     <canvas id="particle-canvas"></canvas>
 
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Přepnout motiv">🌙</button>
+
     <!-- Header -->
     <header class="hero">
         <div class="container">
@@ -149,6 +152,7 @@
     <script src="./js/modules/moon.js"></script>
 
     <!-- Core Application (load order matters) -->
+    <script src="./js/core/theme.js"></script>
     <script src="./js/core/carousel.js"></script>
     <script src="./js/core/config.js"></script>
     <script src="./js/core/state.js"></script>

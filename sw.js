@@ -3,11 +3,12 @@
  * Cache-first for static assets, network-first for API calls
  */
 
-const CACHE_VERSION = 'weather-ultimate-v7';
+const CACHE_VERSION = 'weather-ultimate-v8';
 const STATIC_ASSETS = [
     './',
     './index.html',
     './css/main.css',
+    './js/core/theme.js',
     './js/core/carousel.js',
     './js/core/config.js',
     './js/core/state.js',

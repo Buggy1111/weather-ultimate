@@ -14,6 +14,7 @@ class WeatherUltimate {
         this.forecastManager = new ForecastManager(this);
         this.backgroundManager = typeof BackgroundManager !== 'undefined' ? new BackgroundManager() : null;
         this.carousel = typeof CarouselManager !== 'undefined' ? new CarouselManager('#weatherGrid', '#carouselPagination') : null;
+        this.themeManager = typeof ThemeManager !== 'undefined' ? new ThemeManager() : null;
         this.updateInterval = null;
         this.initializeApp();
     }
@@ -35,6 +36,18 @@ class WeatherUltimate {
     }
 
     setupEventListeners() {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle && this.themeManager) {
+            const updateIcon = () => {
+                themeToggle.textContent = this.themeManager.getTheme() === 'dark' ? '☀️' : '🌙';
+            };
+            updateIcon();
+            themeToggle.addEventListener('click', () => {
+                this.themeManager.toggle();
+                updateIcon();
+            });
+        }
+
         const searchForm = document.getElementById('searchForm');
         const searchInput = document.getElementById('searchInput');
         const searchSuggestions = document.getElementById('searchSuggestions');
