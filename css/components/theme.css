@@ -258,6 +258,18 @@
     background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.04) 50%, transparent 100%);
 }
 
+/* Card Toggle */
+[data-theme="light"] .card-toggle {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .card-toggle:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.75);
+}
+
 /* Forecast Button */
 [data-theme="light"] .forecast-button {
     background: rgba(102, 126, 234, 0.1);

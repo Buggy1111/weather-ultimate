@@ -101,6 +101,27 @@ class WeatherUltimate {
             }
         });
 
+        // Card collapse toggle (event delegation)
+        document.addEventListener('click', (e) => {
+            const toggle = e.target.closest('.card-toggle');
+            if (toggle) {
+                e.stopPropagation();
+                const card = toggle.closest('.weather-card');
+                if (!card) return;
+                const collapsible = card.querySelector('.card-details-collapsible');
+                if (!collapsible) return;
+                const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                toggle.setAttribute('aria-expanded', String(!isExpanded));
+                const textEl = toggle.querySelector('.card-toggle__text');
+                if (textEl) textEl.textContent = isExpanded ? 'Více detailů' : 'Méně detailů';
+                if (isExpanded) {
+                    collapsible.setAttribute('hidden', '');
+                } else {
+                    collapsible.removeAttribute('hidden');
+                }
+            }
+        });
+
         // Forecast button click (event delegation — works on both mobile & desktop)
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('.forecast-button');
@@ -120,6 +141,8 @@ class WeatherUltimate {
                 const card = e.target.closest('.weather-card');
                 if (card &&
                     !e.target.closest('.forecast-button') &&
+                    !e.target.closest('.card-toggle') &&
+                    !e.target.closest('.card-details-collapsible') &&
                     !e.target.closest('.hourly-forecast') &&
                     !e.target.closest('.hourly-item')) {
                     this.handleCardClick(card);

@@ -202,24 +202,31 @@ class UIComponents {
 
                 ${extraInfoHTML}
 
-                ${hourlyForecastHTML}
+                <button class="card-toggle" aria-expanded="false" aria-label="Zobrazit detaily">
+                    <span class="card-toggle__text">Více detailů</span>
+                    <span class="card-toggle__arrow">▼</span>
+                </button>
 
-                ${forecast && forecast.list ? WeatherHelpers.generatePrecipTimeline(forecast.list, timezoneOffset) : ''}
+                <div class="card-details-collapsible" hidden>
+                    ${hourlyForecastHTML}
 
-                <div class="sun-arc-container">
-                    ${WeatherHelpers.generateSunArc(data.sys.sunrise, data.sys.sunset, timezoneOffset)}
-                </div>
+                    ${forecast && forecast.list ? WeatherHelpers.generatePrecipTimeline(forecast.list, timezoneOffset) : ''}
 
-                <div class="activity-suggestions">
-                    ${(() => {
-                        const suggestions = WeatherHelpers.getActivitySuggestions(data.weather[0].main, data.main.temp, data.wind.speed * 3.6);
-                        return suggestions.map(s => `<span class="activity-tag">${s.icon} ${s.text}</span>`).join('');
-                    })()}
-                </div>
+                    <div class="sun-arc-container">
+                        ${WeatherHelpers.generateSunArc(data.sys.sunrise, data.sys.sunset, timezoneOffset)}
+                    </div>
 
-                <div class="weather-mood">
-                    <p class="weather-mood__label">Nálada počasí</p>
-                    <p class="weather-mood__value">${mood.emoji} ${mood.text}</p>
+                    <div class="activity-suggestions">
+                        ${(() => {
+                            const suggestions = WeatherHelpers.getActivitySuggestions(data.weather[0].main, data.main.temp, data.wind.speed * 3.6);
+                            return suggestions.map(s => `<span class="activity-tag">${s.icon} ${s.text}</span>`).join('');
+                        })()}
+                    </div>
+
+                    <div class="weather-mood">
+                        <p class="weather-mood__label">Nálada počasí</p>
+                        <p class="weather-mood__value">${mood.emoji} ${mood.text}</p>
+                    </div>
                 </div>
 
                 <button class="forecast-button" data-forecast-city="${WeatherHelpers.escapeHTML(city.name)}" data-forecast-lat="${city.lat}" data-forecast-lon="${city.lon}">

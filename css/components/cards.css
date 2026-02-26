@@ -470,6 +470,61 @@
     white-space: nowrap;
 }
 
+/* Card Toggle (Collapse/Expand) */
+.card-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    margin: 0.5rem 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    z-index: 10;
+}
+
+.card-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.card-toggle__arrow {
+    font-size: 0.7rem;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.card-toggle[aria-expanded="true"] .card-toggle__arrow {
+    transform: rotate(180deg);
+}
+
+/* Collapsible Section */
+.card-details-collapsible {
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.card-details-collapsible[hidden] {
+    display: block !important;
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.card-details-collapsible:not([hidden]) {
+    max-height: 2000px;
+    opacity: 1;
+}
+
 /* Hourly Forecast */
 .hourly-forecast {
     margin: 1rem 0;
