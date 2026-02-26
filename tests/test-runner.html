@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather Ultimate — Unit Tests</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 2rem; }
+        h1 { margin-bottom: 1rem; color: #667eea; }
+        .summary { padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 1.1rem; }
+        .summary--pass { background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; }
+        .summary--fail { background: rgba(248, 113, 113, 0.15); border: 1px solid #f87171; }
+        .suite { margin-bottom: 1rem; }
+        .suite__name { font-size: 1rem; font-weight: 600; color: #a78bfa; margin-bottom: 0.3rem; }
+        .test { padding: 0.3rem 0.5rem; font-size: 0.9rem; border-left: 3px solid transparent; margin-left: 1rem; }
+        .test--pass { border-color: #4ade80; color: #bbf7d0; }
+        .test--fail { border-color: #f87171; color: #fca5a5; }
+        .test--fail .error { display: block; font-size: 0.8rem; color: #fca5a5; margin-top: 0.2rem; opacity: 0.8; }
+        #results { max-width: 800px; }
+    </style>
+</head>
+<body>
+    <h1>Weather Ultimate — Unit Tests</h1>
+    <div id="results"></div>
+
+    <!-- Minimal DOM stubs for modules that probe the environment -->
+    <canvas id="particle-canvas" style="display:none"></canvas>
+
+    <!-- Load only pure-logic modules (order matters) -->
+    <script src="../js/core/config.js?v=2"></script>
+    <script src="../js/core/ui-helpers.js?v=2"></script>
+    <script src="../js/core/state.js?v=2"></script>
+    <script src="../js/core/cache.js?v=2"></script>
+    <script src="../js/core/ai-predictions.js?v=2"></script>
+
+    <!-- Test framework + tests -->
+    <script src="unit-tests.js?v=2"></script>
+</body>
+</html>
