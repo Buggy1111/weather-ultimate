@@ -114,7 +114,7 @@ class UIComponents {
 
         return `
             <article class="weather-card weather-card--${dayPhase}"
-                     data-city="${city.name}"
+                     data-city="${WeatherHelpers.escapeHTML(city.name)}"
                      data-weather="${weather}"
                      data-lat="${city.lat}"
                      data-lon="${city.lon}"
@@ -133,8 +133,8 @@ class UIComponents {
                 ${moonVisualHTML}
 
                 <header class="weather-card__header">
-                    <h3 class="weather-card__city">${city.name}</h3>
-                    <p class="weather-card__country">${city.country || ''}</p>
+                    <h3 class="weather-card__city">${WeatherHelpers.escapeHTML(city.name)}</h3>
+                    <p class="weather-card__country">${WeatherHelpers.escapeHTML(city.country || '')}</p>
                     <div class="weather-card__local-time"
                          data-timezone="${timezoneOffset}"
                          data-sunrise="${data.sys.sunrise}"
@@ -231,7 +231,7 @@ class UIComponents {
                     <p class="weather-mood__value">${mood.emoji} ${mood.text}</p>
                 </div>
 
-                <button class="forecast-button" onclick="window.weatherApp.showForecast('${city.name}', ${city.lat}, ${city.lon})">
+                <button class="forecast-button" data-forecast-city="${WeatherHelpers.escapeHTML(city.name)}" data-forecast-lat="${city.lat}" data-forecast-lon="${city.lon}">
                     📅 Zobrazit 7-denní předpověď
                 </button>
             </article>
@@ -240,11 +240,12 @@ class UIComponents {
 
     static notification(title, message, type = 'info') {
         const icons = { 'success': '✅', 'error': '❌', 'warning': '⚠️', 'info': 'ℹ️' };
+        const esc = WeatherHelpers.escapeHTML;
         return `
             <div class="notification__icon">${icons[type]}</div>
             <div class="notification__content">
-                <h4 class="notification__title">${title}</h4>
-                <p class="notification__message">${message}</p>
+                <h4 class="notification__title">${esc(title)}</h4>
+                <p class="notification__message">${esc(message)}</p>
             </div>
         `;
     }

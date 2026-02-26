@@ -72,6 +72,19 @@ class WeatherUltimate {
             }
         });
 
+        // Forecast button click (event delegation — works on both mobile & desktop)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.forecast-button');
+            if (btn) {
+                const cityName = btn.dataset.forecastCity;
+                const lat = parseFloat(btn.dataset.forecastLat);
+                const lon = parseFloat(btn.dataset.forecastLon);
+                if (cityName && !isNaN(lat) && !isNaN(lon)) {
+                    this.showForecast(cityName, lat, lon);
+                }
+            }
+        });
+
         // Card body click → open forecast (desktop only)
         if (!isTouchDevice) {
             document.addEventListener('click', (e) => {
@@ -108,7 +121,7 @@ class WeatherUltimate {
                     const data = await this.weatherService.fetchWeather(city.lat, city.lon);
                     const forecast = await this.weatherService.fetchForecast(city.lat, city.lon);
                     let airPollution = null;
-                    try { airPollution = await this.weatherService.fetchAirPollution(city.lat, city.lon); } catch(e) { /* silent */ }
+                    try { airPollution = await this.weatherService.fetchAirPollution(city.lat, city.lon); } catch(e) { console.warn('Air pollution fetch failed:', e.message); }
                     return { city, data, forecast, airPollution };
                 } catch (error) {
                     console.error(`Error loading ${city.name}:`, error);
@@ -146,7 +159,7 @@ class WeatherUltimate {
 
     async searchAndAddCity(query) {
         try {
-            this.showNotification('Hledám', `Vyhledávám město "${query}"...`, 'info');
+            this.showNotification('Hledám', `Vyhledávám město "${WeatherHelpers.escapeHTML(query)}"...`, 'info');
 
             const geoResults = await this.weatherService.searchCity(query);
             if (geoResults.length === 0) {
@@ -164,7 +177,7 @@ class WeatherUltimate {
             const weatherData = await this.weatherService.fetchWeather(city.lat, city.lon);
             const forecastData = await this.weatherService.fetchForecast(city.lat, city.lon);
             let airPollutionData = null;
-            try { airPollutionData = await this.weatherService.fetchAirPollution(city.lat, city.lon); } catch(e) { /* silent */ }
+            try { airPollutionData = await this.weatherService.fetchAirPollution(city.lat, city.lon); } catch(e) { console.warn('Air pollution fetch failed:', e.message); }
 
             const cityId = `${city.lat}-${city.lon}`;
             if (this.state.state.cities.has(cityId)) {
@@ -317,7 +330,7 @@ class WeatherUltimate {
                     newData.id = cityData.id;
                     this.state.addCity(newData);
 
-                    const card = document.querySelector(`[data-city="${cityData.name}"]`);
+                    const card = document.querySelector(`[data-city="${CSS.escape(cityData.name)}"]`);
                     if (card) {
                         card.style.opacity = '0.7';
                         setTimeout(() => { card.style.opacity = '1'; }, 300);

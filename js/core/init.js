@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🔍 Feature detection:', features);
     window.weatherApp = new WeatherUltimate();
 
-    // Connect with weather effects
+    // Connect with weather effects (max 25 retries = 5s)
+    let effectRetries = 0;
     const connectEffects = () => {
         if (window.weatherCardEffects && window.weatherApp) {
             window.weatherApp.cardEffects = window.weatherCardEffects;
@@ -21,8 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.weatherCardEffects.createCardEffect(card, weather);
                 }
             });
-        } else {
+        } else if (++effectRetries < 25) {
             setTimeout(connectEffects, 200);
+        } else {
+            console.warn('Weather Effects not available after 5s');
         }
     };
     setTimeout(connectEffects, 500);
@@ -217,7 +220,7 @@ function getUserLocationWeather() {
                         const data = await ws.fetchWeather(latitude, longitude);
                         const forecast = await ws.fetchForecast(latitude, longitude);
                         let airPollution = null;
-                        try { airPollution = await ws.fetchAirPollution(latitude, longitude); } catch(e) { /* silent */ }
+                        try { airPollution = await ws.fetchAirPollution(latitude, longitude); } catch(e) { console.warn('Air pollution fetch failed:', e.message); }
 
                         const city = {
                             name: data.name,

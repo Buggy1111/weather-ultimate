@@ -15,7 +15,7 @@ class ForecastManager {
 
             const forecastData = await this.app.weatherService.fetchForecast(lat, lon);
             let airPollution = null;
-            try { airPollution = await this.app.weatherService.fetchAirPollution(lat, lon); } catch(e) { /* silent */ }
+            try { airPollution = await this.app.weatherService.fetchAirPollution(lat, lon); } catch(e) { console.warn('Air pollution fetch failed:', e.message); }
 
             const dailyForecasts = this.processForecastData(forecastData.list);
             this.showForecastModal(cityName, dailyForecasts, airPollution);
@@ -180,7 +180,7 @@ class ForecastManager {
         const cityInsights = this.app.aiEngine.generateCityPrediction(cityName, dailyForecasts, airPollution);
         const aiSectionHTML = cityInsights.length > 0 ? `
                     <div class="ai-city-insight">
-                        <h3 class="ai-city-insight__title">🤖 AI Analýza — ${cityName}</h3>
+                        <h3 class="ai-city-insight__title">🤖 AI Analýza — ${WeatherHelpers.escapeHTML(cityName)}</h3>
                         <div class="ai-city-insight__list">
                             ${cityInsights.map(i => `<div class="ai-city-insight__item">${i}</div>`).join('')}
                         </div>
@@ -190,8 +190,8 @@ class ForecastManager {
         const modalHTML = `
             <div id="forecast-modal" class="forecast-modal">
                 <div class="forecast-modal__content">
-                    <button class="forecast-modal__close" onclick="window.weatherApp.closeForecastModal()">&times;</button>
-                    <h2 class="forecast-modal__title">📅 7-denní předpověď pro ${cityName}</h2>
+                    <button class="forecast-modal__close" id="forecast-close-btn">&times;</button>
+                    <h2 class="forecast-modal__title">📅 7-denní předpověď pro ${WeatherHelpers.escapeHTML(cityName)}</h2>
 
                     ${aiSectionHTML}
 
@@ -209,6 +209,9 @@ class ForecastManager {
         `;
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Attach close button listener (no inline onclick)
+        document.getElementById('forecast-close-btn').addEventListener('click', () => this.closeForecastModal());
 
         // Show modal + lock scroll
         const modal = document.getElementById('forecast-modal');
