@@ -1399,11 +1399,11 @@ describe('WeatherHelpers.generatePrecipTimeline', () => {
     });
 });
 
-// ── Card Collapse/Expand ─────────────────────────────────────
-describe('Card collapse behavior', () => {
-    it('UIComponents.weatherCard includes collapse toggle', () => {
-        const city = { name: 'Test', country: 'CZ', lat: 50, lon: 14 };
-        const data = {
+// ── Card Detail Modal ────────────────────────────────────────
+describe('Card detail modal', () => {
+    const makeTestData = () => ({
+        city: { name: 'Test', country: 'CZ', lat: 50, lon: 14 },
+        data: {
             weather: [{ main: 'Clear', id: 800, description: 'clear sky' }],
             main: { temp: 20, feels_like: 18, humidity: 50, pressure: 1015, temp_min: 18, temp_max: 22 },
             wind: { speed: 3, deg: 180 },
@@ -1411,24 +1411,50 @@ describe('Card collapse behavior', () => {
             visibility: 10000,
             sys: { sunrise: Math.floor(Date.now()/1000) - 3600, sunset: Math.floor(Date.now()/1000) + 3600 },
             timezone: 0
-        };
-        const html = UIComponents.weatherCard(city, data);
-        expect(html).toContain('card-toggle');
+        }
     });
 
-    it('UIComponents.weatherCard has collapsible section', () => {
-        const city = { name: 'Test', country: 'CZ', lat: 50, lon: 14 };
-        const data = {
-            weather: [{ main: 'Clear', id: 800, description: 'clear sky' }],
-            main: { temp: 20, feels_like: 18, humidity: 50, pressure: 1015, temp_min: 18, temp_max: 22 },
-            wind: { speed: 3, deg: 180 },
-            clouds: { all: 10 },
-            visibility: 10000,
-            sys: { sunrise: Math.floor(Date.now()/1000) - 3600, sunset: Math.floor(Date.now()/1000) + 3600 },
-            timezone: 0
-        };
+    it('weatherCard has detail button', () => {
+        const { city, data } = makeTestData();
         const html = UIComponents.weatherCard(city, data);
-        expect(html).toContain('card-details-collapsible');
+        expect(html).toContain('card-detail-button');
+    });
+
+    it('weatherCard has card-actions', () => {
+        const { city, data } = makeTestData();
+        const html = UIComponents.weatherCard(city, data);
+        expect(html).toContain('card-actions');
+    });
+
+    it('detailModal returns HTML string', () => {
+        const { city, data } = makeTestData();
+        const html = UIComponents.detailModal(city, data, null, null);
+        expect(typeof html).toBe('string');
+        expect(html).toContain('detail-modal__title');
+    });
+
+    it('detailModal includes sun arc', () => {
+        const { city, data } = makeTestData();
+        const html = UIComponents.detailModal(city, data, null, null);
+        expect(html).toContain('sun-arc-container');
+    });
+
+    it('detailModal includes activity suggestions', () => {
+        const { city, data } = makeTestData();
+        const html = UIComponents.detailModal(city, data, null, null);
+        expect(html).toContain('activity-suggestions');
+    });
+
+    it('detailModal includes weather mood', () => {
+        const { city, data } = makeTestData();
+        const html = UIComponents.detailModal(city, data, null, null);
+        expect(html).toContain('weather-mood');
+    });
+
+    it('detailModal includes close button', () => {
+        const { city, data } = makeTestData();
+        const html = UIComponents.detailModal(city, data, null, null);
+        expect(html).toContain('detail-modal__close');
     });
 });
 

@@ -85,33 +85,6 @@ class UIComponents {
             extraInfoHTML = `<div class="weather-extra">${extraItems.join('')}</div>`;
         }
 
-        let hourlyForecastHTML = '';
-        if (forecast && forecast.list) {
-            const hourlyData = forecast.list.slice(0, 8);
-            hourlyForecastHTML = `
-                <div class="hourly-forecast">
-                    <h4 class="hourly-forecast__title">Hodinová předpověď</h4>
-                    <div class="hourly-forecast__scroll">
-                        ${hourlyData.map(hour => {
-                            const hourTime = new Date(hour.dt * 1000 + timezoneOffset * 1000);
-                            const hourStr = hourTime.toISOString().substring(11, 16);
-                            const hourEmoji = WeatherHelpers.getWeatherEmoji(hour.weather[0].main.toLowerCase(), hour.weather[0].id);
-                            return `
-                                <div class="hourly-item">
-                                    <div class="hourly-item__time">${hourStr}</div>
-                                    <div class="hourly-item__icon">${hourEmoji}</div>
-                                    <div class="hourly-item__temp">${Math.round(hour.main.temp)}°</div>
-                                    <div class="hourly-item__rain">
-                                        ${hour.pop ? `<span class="rain-prob">💧${Math.round(hour.pop * 100)}%</span>` : ''}
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
         return `
             <article class="weather-card weather-card--${dayPhase}"
                      data-city="${WeatherHelpers.escapeHTML(city.name)}"
@@ -210,38 +183,14 @@ class UIComponents {
                         '</div>';
                 })()}
 
-                <button class="card-toggle" aria-expanded="false" aria-label="Zobrazit detaily">
-                    <span class="card-toggle__text">Více detailů</span>
-                    <span class="card-toggle__arrow">▼</span>
-                </button>
-
-                <div class="card-details-collapsible" hidden>
-                    ${hourlyForecastHTML}
-
-                    ${forecast && forecast.list ? WeatherHelpers.generatePrecipTimeline(forecast.list, timezoneOffset) : ''}
-
-                    ${forecast && forecast.list ? WeatherHelpers.generateTempTrend(forecast.list, timezoneOffset) : ''}
-
-                    <div class="sun-arc-container">
-                        ${WeatherHelpers.generateSunArc(data.sys.sunrise, data.sys.sunset, timezoneOffset)}
-                    </div>
-
-                    <div class="activity-suggestions">
-                        ${(() => {
-                            const suggestions = WeatherHelpers.getActivitySuggestions(data.weather[0].main, data.main.temp, data.wind.speed * 3.6);
-                            return suggestions.map(s => `<span class="activity-tag">${s.icon} ${s.text}</span>`).join('');
-                        })()}
-                    </div>
-
-                    <div class="weather-mood">
-                        <p class="weather-mood__label">Nálada počasí</p>
-                        <p class="weather-mood__value">${mood.emoji} ${mood.text}</p>
-                    </div>
+                <div class="card-actions">
+                    <button class="card-detail-button" data-detail-city="${WeatherHelpers.escapeHTML(city.name)}" data-detail-lat="${city.lat}" data-detail-lon="${city.lon}">
+                        🔍 Více detailů
+                    </button>
+                    <button class="forecast-button" data-forecast-city="${WeatherHelpers.escapeHTML(city.name)}" data-forecast-lat="${city.lat}" data-forecast-lon="${city.lon}">
+                        📅 7-denní předpověď
+                    </button>
                 </div>
-
-                <button class="forecast-button" data-forecast-city="${WeatherHelpers.escapeHTML(city.name)}" data-forecast-lat="${city.lat}" data-forecast-lon="${city.lon}">
-                    📅 Zobrazit 7-denní předpověď
-                </button>
             </article>
         `;
     }
@@ -254,6 +203,74 @@ class UIComponents {
             <div class="notification__content">
                 <h4 class="notification__title">${esc(title)}</h4>
                 <p class="notification__message">${esc(message)}</p>
+            </div>
+        `;
+    }
+
+    static detailModal(city, data, forecast, airPollution) {
+        const weather = data.weather[0].main.toLowerCase();
+        const mood = CONFIG.WEATHER_MOODS[weather] || CONFIG.WEATHER_MOODS['clear'];
+        const timezoneOffset = data.timezone || 0;
+        const esc = WeatherHelpers.escapeHTML;
+
+        let hourlyHTML = '';
+        if (forecast?.list) {
+            const hourlyData = forecast.list.slice(0, 8);
+            hourlyHTML = `
+                <div class="hourly-forecast">
+                    <h4 class="hourly-forecast__title">Hodinová předpověď</h4>
+                    <div class="hourly-forecast__scroll">
+                        ${hourlyData.map(hour => {
+                            const hourTime = new Date(hour.dt * 1000 + timezoneOffset * 1000);
+                            const hourStr = hourTime.toISOString().substring(11, 16);
+                            const hourEmoji = WeatherHelpers.getWeatherEmoji(hour.weather[0].main.toLowerCase(), hour.weather[0].id);
+                            return `
+                                <div class="hourly-item">
+                                    <div class="hourly-item__time">${hourStr}</div>
+                                    <div class="hourly-item__icon">${hourEmoji}</div>
+                                    <div class="hourly-item__temp">${Math.round(hour.main.temp)}°</div>
+                                    <div class="hourly-item__rain">
+                                        ${hour.pop ? `<span class="rain-prob">💧${Math.round(hour.pop * 100)}%</span>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        const precipHTML = forecast?.list ? WeatherHelpers.generatePrecipTimeline(forecast.list, timezoneOffset) : '';
+        const trendHTML = forecast?.list ? WeatherHelpers.generateTempTrend(forecast.list, timezoneOffset) : '';
+        const sunArcHTML = WeatherHelpers.generateSunArc(data.sys.sunrise, data.sys.sunset, timezoneOffset);
+        const suggestions = WeatherHelpers.getActivitySuggestions(data.weather[0].main, data.main.temp, data.wind.speed * 3.6);
+        const alerts = WeatherHelpers.getWeatherAlerts(data, forecast?.list);
+
+        const alertsHTML = alerts.length > 0 ?
+            '<div class="weather-alerts">' +
+                alerts.map(a => `<div class="weather-alert weather-alert--${a.severity}">${a.icon} ${esc(a.text)}</div>`).join('') +
+            '</div>' : '';
+
+        return `
+            <button class="detail-modal__close" aria-label="Zavřít">&times;</button>
+            <h2 class="detail-modal__title">${esc(city.name)} — Detaily</h2>
+
+            ${alertsHTML}
+            ${hourlyHTML}
+            ${precipHTML}
+            ${trendHTML}
+
+            <div class="sun-arc-container">
+                ${sunArcHTML}
+            </div>
+
+            <div class="activity-suggestions">
+                ${suggestions.map(s => `<span class="activity-tag">${s.icon} ${s.text}</span>`).join('')}
+            </div>
+
+            <div class="weather-mood" style="--mood-color-1: ${mood.colors[0]}; --mood-color-2: ${mood.colors[1]}">
+                <p class="weather-mood__label">Nálada počasí</p>
+                <p class="weather-mood__value">${mood.emoji} ${mood.text}</p>
             </div>
         `;
     }

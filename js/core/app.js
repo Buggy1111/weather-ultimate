@@ -101,23 +101,35 @@ class WeatherUltimate {
             }
         });
 
-        // Card collapse toggle (event delegation)
+        // Detail modal (event delegation)
         document.addEventListener('click', (e) => {
-            const toggle = e.target.closest('.card-toggle');
-            if (toggle) {
+            const btn = e.target.closest('.card-detail-button');
+            if (btn) {
                 e.stopPropagation();
-                const card = toggle.closest('.weather-card');
-                if (!card) return;
-                const collapsible = card.querySelector('.card-details-collapsible');
-                if (!collapsible) return;
-                const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                toggle.setAttribute('aria-expanded', String(!isExpanded));
-                const textEl = toggle.querySelector('.card-toggle__text');
-                if (textEl) textEl.textContent = isExpanded ? 'Více detailů' : 'Méně detailů';
-                if (isExpanded) {
-                    collapsible.setAttribute('hidden', '');
-                } else {
-                    collapsible.removeAttribute('hidden');
+                const cityName = btn.dataset.detailCity;
+                const lat = parseFloat(btn.dataset.detailLat);
+                const lon = parseFloat(btn.dataset.detailLon);
+                if (cityName && !isNaN(lat) && !isNaN(lon)) {
+                    this.openDetailModal(cityName, lat, lon);
+                }
+            }
+        });
+
+        // Close detail modal
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('detailModal');
+            if (e.target.closest('.detail-modal__close')) {
+                this.closeDetailModal();
+            } else if (e.target === modal) {
+                this.closeDetailModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('detailModal');
+                if (modal && modal.classList.contains('detail-modal--show')) {
+                    this.closeDetailModal();
                 }
             }
         });
@@ -141,10 +153,7 @@ class WeatherUltimate {
                 const card = e.target.closest('.weather-card');
                 if (card &&
                     !e.target.closest('.forecast-button') &&
-                    !e.target.closest('.card-toggle') &&
-                    !e.target.closest('.card-details-collapsible') &&
-                    !e.target.closest('.hourly-forecast') &&
-                    !e.target.closest('.hourly-item')) {
+                    !e.target.closest('.card-detail-button')) {
                     this.handleCardClick(card);
                 }
             });
@@ -417,6 +426,32 @@ class WeatherUltimate {
                 observer.observe(card);
             });
         }, 1000);
+    }
+
+    async openDetailModal(cityName, lat, lon) {
+        try {
+            const city = CONFIG.DEFAULT_CITIES.find(c => c.name === cityName) || { name: cityName, country: '', lat, lon };
+            const data = await this.weatherService.fetchWeather(lat, lon);
+            const forecast = await this.weatherService.fetchForecast(lat, lon);
+            let airPollution = null;
+            try { airPollution = await this.weatherService.fetchAirPollution(lat, lon); } catch(e) {}
+
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('detailModalContent');
+            content.innerHTML = UIComponents.detailModal(city, data, forecast, airPollution);
+            modal.classList.add('detail-modal--show');
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            this.showNotification('Chyba', 'Nepodařilo se načíst detaily', 'error');
+        }
+    }
+
+    closeDetailModal() {
+        const modal = document.getElementById('detailModal');
+        if (modal) {
+            modal.classList.remove('detail-modal--show');
+            document.body.style.overflow = '';
+        }
     }
 
     updateBackground() {
