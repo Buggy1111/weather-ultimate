@@ -1332,5 +1332,72 @@ describe('ThemeManager', () => {
     });
 });
 
+// ── Precipitation Timeline ───────────────────────────────────
+describe('WeatherHelpers.generatePrecipTimeline', () => {
+    const makeItem = (dtOffset, pop, rain3h) => ({
+        dt: Math.floor(Date.now() / 1000) + dtOffset,
+        pop: pop,
+        rain: rain3h ? { '3h': rain3h } : undefined,
+        weather: [{ main: pop > 0.3 ? 'Rain' : 'Clear' }]
+    });
+
+    it('function exists', () => {
+        expect(typeof WeatherHelpers.generatePrecipTimeline).toBe('function');
+    });
+
+    it('returns empty string for no data', () => {
+        expect(WeatherHelpers.generatePrecipTimeline(null, 0)).toBe('');
+        expect(WeatherHelpers.generatePrecipTimeline([], 0)).toBe('');
+    });
+
+    it('returns empty when no precipitation expected', () => {
+        const items = [
+            makeItem(0, 0, 0),
+            makeItem(10800, 0, 0),
+            makeItem(21600, 0.05, 0)
+        ];
+        expect(WeatherHelpers.generatePrecipTimeline(items, 0)).toBe('');
+    });
+
+    it('returns HTML when precipitation expected', () => {
+        const items = [
+            makeItem(0, 0.1, 0),
+            makeItem(10800, 0.7, 2.5),
+            makeItem(21600, 0.9, 5.0),
+            makeItem(32400, 0.3, 0.5)
+        ];
+        const html = WeatherHelpers.generatePrecipTimeline(items, 0);
+        expect(html).toContain('precip-timeline');
+    });
+
+    it('shows precipitation bars', () => {
+        const items = [
+            makeItem(0, 0.5, 1.0),
+            makeItem(10800, 0.8, 3.0)
+        ];
+        const html = WeatherHelpers.generatePrecipTimeline(items, 0);
+        expect(html).toContain('precip-bar');
+    });
+
+    it('includes time labels', () => {
+        const items = [
+            makeItem(0, 0.6, 2.0),
+            makeItem(10800, 0.4, 1.0)
+        ];
+        const html = WeatherHelpers.generatePrecipTimeline(items, 0);
+        expect(html).toContain('precip-time');
+    });
+
+    it('includes rain alert text', () => {
+        const items = [
+            makeItem(0, 0.1, 0),
+            makeItem(10800, 0.8, 3.0),
+            makeItem(21600, 0.2, 0.5)
+        ];
+        const html = WeatherHelpers.generatePrecipTimeline(items, 0);
+        expect(html).toContain('precip-alert');
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();

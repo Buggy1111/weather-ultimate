@@ -249,6 +249,45 @@ const WeatherHelpers = {
         return activities.slice(0, 3);
     },
 
+    generatePrecipTimeline(forecastItems, timezoneOffset) {
+        if (!forecastItems || forecastItems.length === 0) return '';
+
+        const items = forecastItems.slice(0, 8);
+        const hasPrecip = items.some(i => (i.pop || 0) >= 0.1);
+        if (!hasPrecip) return '';
+
+        const maxPop = Math.max(...items.map(i => i.pop || 0));
+        const peakIndex = items.findIndex(i => (i.pop || 0) === maxPop);
+        const peakHours = peakIndex >= 0 ? peakIndex * 3 : 0;
+
+        let alertText = '';
+        const firstRainIdx = items.findIndex(i => (i.pop || 0) >= 0.3);
+        if (firstRainIdx === 0) {
+            alertText = '🌧️ Srážky probíhají';
+        } else if (firstRainIdx > 0) {
+            alertText = `🌧️ Déšť očekáván za ~${firstRainIdx * 3}h`;
+        }
+
+        const bars = items.map(item => {
+            const pop = item.pop || 0;
+            const heightPct = Math.round(pop * 100);
+            const time = new Date((item.dt + timezoneOffset) * 1000);
+            const timeStr = time.toISOString().substring(11, 16);
+            const rain = item.rain?.['3h'] || 0;
+            const color = pop >= 0.7 ? '#3b82f6' : pop >= 0.4 ? '#60a5fa' : '#93c5fd';
+
+            return `<div class="precip-slot">` +
+                `<div class="precip-bar" style="height:${Math.max(heightPct, 2)}%;background:${color}" title="${Math.round(pop * 100)}%${rain ? ' ' + rain.toFixed(1) + 'mm' : ''}"></div>` +
+                `<span class="precip-time">${timeStr}</span>` +
+                `</div>`;
+        }).join('');
+
+        return `<div class="precip-timeline">` +
+            (alertText ? `<div class="precip-alert">${alertText}</div>` : '') +
+            `<div class="precip-chart">${bars}</div>` +
+            `</div>`;
+    },
+
     generateTempBar(dayMin, dayMax, weekMin, weekMax) {
         const range = weekMax - weekMin || 1;
         const leftPct = ((dayMin - weekMin) / range) * 100;

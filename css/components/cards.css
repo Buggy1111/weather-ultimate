@@ -573,6 +573,68 @@
     overflow: visible;
 }
 
+/* Precipitation Timeline */
+.precip-timeline {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    z-index: 10;
+}
+
+.precip-alert {
+    font-size: var(--fs-xs);
+    color: #60a5fa;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.precip-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 50px;
+}
+
+.precip-slot {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.precip-bar {
+    width: 100%;
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    transition: height 0.3s ease;
+    opacity: 0.8;
+}
+
+.precip-time {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 0.2rem;
+    white-space: nowrap;
+}
+
+[data-theme="light"] .precip-timeline {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .precip-alert {
+    color: #2563eb;
+}
+
+[data-theme="light"] .precip-time {
+    color: rgba(0, 0, 0, 0.4);
+}
+
 /* Activity Suggestions */
 .activity-suggestions {
     display: flex;

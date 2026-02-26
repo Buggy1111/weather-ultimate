@@ -204,6 +204,8 @@ class UIComponents {
 
                 ${hourlyForecastHTML}
 
+                ${forecast && forecast.list ? WeatherHelpers.generatePrecipTimeline(forecast.list, timezoneOffset) : ''}
+
                 <div class="sun-arc-container">
                     ${WeatherHelpers.generateSunArc(data.sys.sunrise, data.sys.sunset, timezoneOffset)}
                 </div>
