@@ -14,8 +14,8 @@ html {
     -webkit-text-size-adjust: 100%;
 }
 
-/* zoom only on larger screens — on mobile 0.75 makes everything unreadably small */
-@media (min-width: 768px) {
+/* zoom only on desktops — tablets/mobile stay at 100% */
+@media (min-width: 1440px) {
     html { zoom: 0.75; }
 }
 

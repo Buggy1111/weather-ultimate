@@ -266,10 +266,11 @@ class WeatherSounds {
         
         document.body.appendChild(ui);
 
-        // Mobile: tap toggle = mute/unmute, long-press = expand panel
+        // Mute/unmute + long-press expand (mobile & desktop)
         const toggle = document.getElementById('sound-toggle');
         let longPressTimer = null;
         let wasLongPress = false;
+        let handledByTouch = false;
 
         toggle.addEventListener('touchstart', (e) => {
             wasLongPress = false;
@@ -282,6 +283,8 @@ class WeatherSounds {
         toggle.addEventListener('touchend', (e) => {
             clearTimeout(longPressTimer);
             if (!wasLongPress) {
+                e.preventDefault(); // prevent subsequent click event
+                handledByTouch = true;
                 this.toggleSound();
             }
         });
@@ -293,10 +296,9 @@ class WeatherSounds {
             }
         }, { passive: true });
 
-        // Desktop: normal click
-        toggle.addEventListener('click', (e) => {
-            // Only handle on non-touch devices (touch handled above)
-            if (e.sourceCapabilities?.firesTouchEvents) return;
+        // Desktop click (skip if already handled by touch)
+        toggle.addEventListener('click', () => {
+            if (handledByTouch) { handledByTouch = false; return; }
             this.toggleSound();
         });
 

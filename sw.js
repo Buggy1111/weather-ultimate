@@ -3,7 +3,7 @@
  * Cache-first for static assets, network-first for API calls
  */
 
-const CACHE_VERSION = 'weather-ultimate-v3';
+const CACHE_VERSION = 'weather-ultimate-v5';
 const STATIC_ASSETS = [
     './',
     './index.html',
