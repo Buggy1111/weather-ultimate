@@ -258,6 +258,39 @@
     background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.04) 50%, transparent 100%);
 }
 
+/* Weather Alerts */
+[data-theme="light"] .weather-alert--info {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
+    color: #2563eb;
+}
+
+[data-theme="light"] .weather-alert--warning {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #b45309;
+}
+
+[data-theme="light"] .weather-alert--danger {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #dc2626;
+}
+
+/* Temperature Trend */
+[data-theme="light"] .temp-trend-container {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .temp-trend__label {
+    fill: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="light"] .temp-trend__time {
+    fill: rgba(0, 0, 0, 0.4);
+}
+
 /* Card Toggle */
 [data-theme="light"] .card-toggle {
     background: rgba(0, 0, 0, 0.03);

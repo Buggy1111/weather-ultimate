@@ -288,6 +288,116 @@ const WeatherHelpers = {
             `</div>`;
     },
 
+    getWeatherAlerts(data, forecastItems) {
+        const alerts = [];
+        if (!data?.main) return alerts;
+
+        const temp = data.main.temp;
+        const humidity = data.main.humidity || 0;
+        const windSpeed = (data.wind?.speed || 0) * 3.6; // m/s → km/h
+        const weather = data.weather?.[0]?.main || '';
+
+        // Extreme cold
+        if (temp <= -10) {
+            alerts.push({ icon: '🥶', text: 'Extrémní mráz — omezte pobyt venku', severity: 'danger' });
+        } else if (temp <= 0) {
+            alerts.push({ icon: '❄️', text: 'Mráz — pozor na námrazu', severity: 'warning' });
+        }
+
+        // Extreme heat
+        if (temp >= 35) {
+            alerts.push({ icon: '🔥', text: 'Extrémní vedro — pijte dostatek tekutin', severity: 'danger' });
+        } else if (temp >= 30 && humidity >= 70) {
+            alerts.push({ icon: '🥵', text: 'Dusno a parno — zvýšené riziko úpalu', severity: 'warning' });
+        }
+
+        // Strong wind
+        if (windSpeed >= 60) {
+            alerts.push({ icon: '🌪️', text: 'Vichřice — vyhněte se otevřeným plochám', severity: 'danger' });
+        } else if (windSpeed >= 40) {
+            alerts.push({ icon: '💨', text: 'Silný vítr — buďte opatrní', severity: 'warning' });
+        }
+
+        // Thunderstorm
+        if (weather === 'Thunderstorm') {
+            alerts.push({ icon: '⛈️', text: 'Bouřka — zůstaňte v bezpečí', severity: 'danger' });
+        }
+
+        // Forecast-based alerts
+        if (forecastItems && forecastItems.length >= 2) {
+            const hasIncomingStorm = forecastItems.some(i =>
+                i.weather?.[0]?.main === 'Thunderstorm'
+            );
+            if (hasIncomingStorm && weather !== 'Thunderstorm') {
+                alerts.push({ icon: '⚡', text: 'Bouřka se blíží v následujících hodinách', severity: 'warning' });
+            }
+
+            const futureTempItems = forecastItems.filter(i => i.main?.temp != null);
+            if (futureTempItems.length >= 2) {
+                const lastTemp = futureTempItems[futureTempItems.length - 1].main.temp;
+                const drop = temp - lastTemp;
+                if (drop >= 8) {
+                    alerts.push({ icon: '📉', text: `Výrazný pokles teploty o ${Math.round(drop)}°C — očekávejte ochlazení`, severity: 'info' });
+                }
+            }
+        }
+
+        return alerts;
+    },
+
+    generateTempTrend(forecastItems, timezoneOffset) {
+        if (!forecastItems || forecastItems.length === 0) return '';
+
+        const items = forecastItems.slice(0, 8);
+        const temps = items.map(i => i.main?.temp ?? 0);
+        const minTemp = Math.min(...temps);
+        const maxTemp = Math.max(...temps);
+        const range = maxTemp - minTemp || 1;
+
+        const svgW = 300;
+        const svgH = 100;
+        const padX = 30;
+        const padTop = 20;
+        const padBot = 25;
+        const plotW = svgW - padX * 2;
+        const plotH = svgH - padTop - padBot;
+
+        const points = items.map((item, i) => {
+            const x = padX + (i / Math.max(items.length - 1, 1)) * plotW;
+            const y = padTop + plotH - ((temps[i] - minTemp) / range) * plotH;
+            return { x, y, temp: Math.round(temps[i]), item };
+        });
+
+        const polyline = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+
+        const gradientArea = `${points[0].x.toFixed(1)},${padTop + plotH} ${polyline} ${points[points.length-1].x.toFixed(1)},${padTop + plotH}`;
+
+        const dots = points.map(p =>
+            `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${this.getTempColor(p.temp)}" />`
+        ).join('');
+
+        const tempLabels = points.filter((_, i) => i === 0 || i === points.length - 1 || i % 2 === 0).map(p =>
+            `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1) - 8}" class="temp-trend__label">${p.temp}°</text>`
+        ).join('');
+
+        const timeLabels = points.filter((_, i) => i % 2 === 0 || i === points.length - 1).map(p => {
+            const time = new Date((p.item.dt + timezoneOffset) * 1000);
+            const timeStr = time.toISOString().substring(11, 16);
+            return `<text x="${p.x.toFixed(1)}" y="${padTop + plotH + 16}" class="temp-trend__time">${timeStr}</text>`;
+        }).join('');
+
+        return `<div class="temp-trend-container">` +
+            `<svg class="temp-trend" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">` +
+            `<defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">` +
+            `<stop offset="0%" stop-color="${this.getTempColor(maxTemp)}" stop-opacity="0.3"/>` +
+            `<stop offset="100%" stop-color="${this.getTempColor(minTemp)}" stop-opacity="0.05"/>` +
+            `</linearGradient></defs>` +
+            `<polygon points="${gradientArea}" fill="url(#trendGrad)"/>` +
+            `<polyline points="${polyline}" fill="none" stroke="url(#trendGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke: rgba(255,255,255,0.6)"/>` +
+            dots + tempLabels + timeLabels +
+            `</svg></div>`;
+    },
+
     generateTempBar(dayMin, dayMax, weekMin, weekMax) {
         const range = weekMax - weekMin || 1;
         const leftPct = ((dayMin - weekMin) / range) * 100;

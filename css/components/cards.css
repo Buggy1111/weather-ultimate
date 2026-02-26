@@ -470,6 +470,75 @@
     white-space: nowrap;
 }
 
+/* Weather Alerts */
+.weather-alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+    z-index: 10;
+}
+
+.weather-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.weather-alert--info {
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    color: #93bbfc;
+}
+
+.weather-alert--warning {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.weather-alert--danger {
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    color: #f87171;
+}
+
+/* Temperature Trend */
+.temp-trend-container {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 0.5rem 0.75rem;
+    margin: 0.5rem 0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    z-index: 10;
+}
+
+.temp-trend {
+    display: block;
+    width: 100%;
+    overflow: visible;
+}
+
+.temp-trend__label {
+    font-size: 8px;
+    fill: rgba(255, 255, 255, 0.8);
+    text-anchor: middle;
+    font-weight: 600;
+}
+
+.temp-trend__time {
+    font-size: 7px;
+    fill: rgba(255, 255, 255, 0.4);
+    text-anchor: middle;
+}
+
 /* Card Toggle (Collapse/Expand) */
 .card-toggle {
     display: flex;

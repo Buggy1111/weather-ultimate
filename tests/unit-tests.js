@@ -1432,5 +1432,139 @@ describe('Card collapse behavior', () => {
     });
 });
 
+// ── Weather Alerts (#12) ─────────────────────────────────────
+describe('WeatherHelpers.getWeatherAlerts', () => {
+    const makeData = (temp, weather, windSpeed, humidity) => ({
+        main: { temp, humidity: humidity || 50, pressure: 1013 },
+        weather: [{ main: weather, id: 800, description: '' }],
+        wind: { speed: windSpeed || 3 }
+    });
+
+    it('function exists', () => {
+        expect(typeof WeatherHelpers.getWeatherAlerts).toBe('function');
+    });
+
+    it('returns array', () => {
+        const result = WeatherHelpers.getWeatherAlerts(makeData(20, 'Clear', 3, 50));
+        expect(Array.isArray(result)).toBeTruthy();
+    });
+
+    it('returns empty for normal weather', () => {
+        const result = WeatherHelpers.getWeatherAlerts(makeData(20, 'Clear', 3, 50));
+        expect(result.length).toBe(0);
+    });
+
+    it('alerts for extreme cold', () => {
+        const result = WeatherHelpers.getWeatherAlerts(makeData(-15, 'Clear', 5, 50));
+        expect(result.length).toBeGreaterThan(0);
+        expect(result.some(a => a.severity === 'warning' || a.severity === 'danger')).toBeTruthy();
+    });
+
+    it('alerts for extreme heat', () => {
+        const result = WeatherHelpers.getWeatherAlerts(makeData(38, 'Clear', 2, 50));
+        expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('alerts for strong wind', () => {
+        const result = WeatherHelpers.getWeatherAlerts(makeData(15, 'Clear', 20, 50));
+        expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('alerts for thunderstorm', () => {
+        const result = WeatherHelpers.getWeatherAlerts(makeData(20, 'Thunderstorm', 10, 70));
+        expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('each alert has icon, text, severity', () => {
+        const result = WeatherHelpers.getWeatherAlerts(makeData(-18, 'Snow', 15, 80));
+        result.forEach(a => {
+            expect(typeof a.icon).toBe('string');
+            expect(typeof a.text).toBe('string');
+            expect(['info', 'warning', 'danger'].includes(a.severity)).toBeTruthy();
+        });
+    });
+
+    it('alerts for high humidity + heat', () => {
+        const result = WeatherHelpers.getWeatherAlerts(makeData(33, 'Clear', 2, 85));
+        expect(result.some(a => a.text.toLowerCase().includes('dusno') || a.text.toLowerCase().includes('parno'))).toBeTruthy();
+    });
+
+    it('forecast alerts detect incoming storm', () => {
+        const forecast = [
+            { dt: Date.now()/1000, weather: [{ main: 'Clear' }], pop: 0 },
+            { dt: Date.now()/1000 + 10800, weather: [{ main: 'Clear' }], pop: 0.1 },
+            { dt: Date.now()/1000 + 21600, weather: [{ main: 'Thunderstorm' }], pop: 0.9 }
+        ];
+        const result = WeatherHelpers.getWeatherAlerts(makeData(20, 'Clear', 3, 50), forecast);
+        expect(result.some(a => a.text.toLowerCase().includes('bouřk') || a.text.toLowerCase().includes('storm'))).toBeTruthy();
+    });
+
+    it('forecast alerts detect large temp drop', () => {
+        const forecast = [
+            { dt: Date.now()/1000, main: { temp: 22 }, weather: [{ main: 'Clear' }], pop: 0 },
+            { dt: Date.now()/1000 + 10800, main: { temp: 18 }, weather: [{ main: 'Clouds' }], pop: 0 },
+            { dt: Date.now()/1000 + 21600, main: { temp: 10 }, weather: [{ main: 'Rain' }], pop: 0.5 }
+        ];
+        const result = WeatherHelpers.getWeatherAlerts(makeData(22, 'Clear', 3, 50), forecast);
+        expect(result.some(a => a.text.toLowerCase().includes('pokles') || a.text.toLowerCase().includes('ochlaz'))).toBeTruthy();
+    });
+});
+
+// ── Temperature Trend Chart (#13) ────────────────────────────
+describe('WeatherHelpers.generateTempTrend', () => {
+    const makeItem = (dtOffset, temp, feelsLike) => ({
+        dt: Math.floor(Date.now() / 1000) + dtOffset,
+        main: { temp, feels_like: feelsLike || temp },
+        weather: [{ main: 'Clear', id: 800 }]
+    });
+
+    it('function exists', () => {
+        expect(typeof WeatherHelpers.generateTempTrend).toBe('function');
+    });
+
+    it('returns empty string for no data', () => {
+        expect(WeatherHelpers.generateTempTrend(null, 0)).toBe('');
+        expect(WeatherHelpers.generateTempTrend([], 0)).toBe('');
+    });
+
+    it('returns SVG for valid data', () => {
+        const items = [makeItem(0, 20), makeItem(10800, 22), makeItem(21600, 18)];
+        const svg = WeatherHelpers.generateTempTrend(items, 0);
+        expect(svg).toContain('<svg');
+        expect(svg).toContain('</svg>');
+    });
+
+    it('includes temp-trend class', () => {
+        const items = [makeItem(0, 15), makeItem(10800, 18), makeItem(21600, 20)];
+        const html = WeatherHelpers.generateTempTrend(items, 0);
+        expect(html).toContain('temp-trend');
+    });
+
+    it('includes polyline path for temperatures', () => {
+        const items = [makeItem(0, 15), makeItem(10800, 18), makeItem(21600, 20), makeItem(32400, 17)];
+        const html = WeatherHelpers.generateTempTrend(items, 0);
+        expect(html).toContain('polyline');
+    });
+
+    it('shows temperature labels', () => {
+        const items = [makeItem(0, 15), makeItem(10800, 18), makeItem(21600, 20)];
+        const html = WeatherHelpers.generateTempTrend(items, 0);
+        expect(html).toContain('15');
+        expect(html).toContain('20');
+    });
+
+    it('shows time labels', () => {
+        const items = [makeItem(0, 15), makeItem(10800, 18)];
+        const html = WeatherHelpers.generateTempTrend(items, 0);
+        expect(html).toContain('temp-trend__time');
+    });
+
+    it('handles single data point', () => {
+        const items = [makeItem(0, 20)];
+        const html = WeatherHelpers.generateTempTrend(items, 0);
+        expect(html).toContain('temp-trend');
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();

@@ -202,6 +202,14 @@ class UIComponents {
 
                 ${extraInfoHTML}
 
+                ${(() => {
+                    const alerts = WeatherHelpers.getWeatherAlerts(data, forecast?.list);
+                    if (alerts.length === 0) return '';
+                    return '<div class="weather-alerts">' +
+                        alerts.map(a => `<div class="weather-alert weather-alert--${a.severity}">${a.icon} ${WeatherHelpers.escapeHTML(a.text)}</div>`).join('') +
+                        '</div>';
+                })()}
+
                 <button class="card-toggle" aria-expanded="false" aria-label="Zobrazit detaily">
                     <span class="card-toggle__text">Více detailů</span>
                     <span class="card-toggle__arrow">▼</span>
@@ -211,6 +219,8 @@ class UIComponents {
                     ${hourlyForecastHTML}
 
                     ${forecast && forecast.list ? WeatherHelpers.generatePrecipTimeline(forecast.list, timezoneOffset) : ''}
+
+                    ${forecast && forecast.list ? WeatherHelpers.generateTempTrend(forecast.list, timezoneOffset) : ''}
 
                     <div class="sun-arc-container">
                         ${WeatherHelpers.generateSunArc(data.sys.sunrise, data.sys.sunset, timezoneOffset)}
