@@ -66,11 +66,9 @@ const WeatherHelpers = {
         return description;
     },
 
-    getWeatherEmoji(weather, weatherId = null) {
+    getWeatherEmoji(weather, weatherId = null, isNight = false) {
         if (weatherId) {
-            if (weatherId >= 200 && weatherId < 210) return '⛈️';
-            if (weatherId >= 210 && weatherId < 220) return '🌩️';
-            if (weatherId >= 220 && weatherId < 300) return '⛈️';
+            if (weatherId >= 200 && weatherId < 300) return '⛈️';
             if (weatherId >= 300 && weatherId < 320) return '🌦️';
             if (weatherId === 500) return '🌦️';
             if (weatherId === 501) return '🌧️';
@@ -81,12 +79,13 @@ const WeatherHelpers = {
             if (weatherId === 601) return '❄️';
             if (weatherId >= 602 && weatherId < 700) return '🌨️';
             if (weatherId >= 700 && weatherId < 800) return '🌫️';
-            if (weatherId === 800) return '☀️';
-            if (weatherId === 801) return '🌤️';
+            if (weatherId === 800) return isNight ? '🌙' : '☀️';
+            if (weatherId === 801) return isNight ? '☁️' : '🌤️';
             if (weatherId === 802) return '⛅';
             if (weatherId === 803) return '🌥️';
             if (weatherId === 804) return '☁️';
         }
+        if (isNight && weather === 'clear') return '🌙';
         const emojis = {
             'clear': '☀️', 'clouds': '☁️', 'rain': '🌧️', 'drizzle': '🌦️',
             'thunderstorm': '⛈️', 'snow': '❄️', 'mist': '🌫️', 'fog': '🌫️', 'haze': '🌫️'

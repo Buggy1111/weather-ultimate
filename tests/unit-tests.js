@@ -322,6 +322,22 @@ describe('WeatherHelpers.getWeatherEmoji', () => {
     it('uses weatherId for thunderstorm (200)', () => {
         expect(WeatherHelpers.getWeatherEmoji('thunderstorm', 200)).toBe('\u26C8\uFE0F');
     });
+
+    it('returns moon for clear night (isNight=true)', () => {
+        expect(WeatherHelpers.getWeatherEmoji('clear', 800, true)).toBe('\uD83C\uDF19');
+    });
+
+    it('returns sun for clear day (isNight=false)', () => {
+        expect(WeatherHelpers.getWeatherEmoji('clear', 800, false)).toBe('\u2600\uFE0F');
+    });
+
+    it('returns moon for clear without weatherId at night', () => {
+        expect(WeatherHelpers.getWeatherEmoji('clear', null, true)).toBe('\uD83C\uDF19');
+    });
+
+    it('returns cloud for 801 at night', () => {
+        expect(WeatherHelpers.getWeatherEmoji('clouds', 801, true)).toBe('\u2601\uFE0F');
+    });
 });
 
 // ── WeatherHelpers.getWindDirection ───────────────────────────
@@ -1294,7 +1310,7 @@ describe('WeatherHelpers.getActivitySuggestions', () => {
     });
 });
 
-// ── ThemeManager: Light/Dark Mode ─────────────────────────────
+// ── ThemeManager: Auto/Light/Dark Mode ────────────────────────
 describe('ThemeManager', () => {
     it('class exists', () => {
         expect(typeof ThemeManager).toBe('function');
@@ -1314,13 +1330,16 @@ describe('ThemeManager', () => {
         expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     });
 
-    it('toggle switches theme', () => {
+    it('toggle cycles auto → light → dark → auto', () => {
         const tm = new ThemeManager();
-        tm.setTheme('dark');
+        tm.setTheme('auto');
+        expect(tm.getMode()).toBe('auto');
         tm.toggle();
-        expect(tm.getTheme()).toBe('light');
+        expect(tm.getMode()).toBe('light');
         tm.toggle();
-        expect(tm.getTheme()).toBe('dark');
+        expect(tm.getMode()).toBe('dark');
+        tm.toggle();
+        expect(tm.getMode()).toBe('auto');
     });
 
     it('persists to localStorage', () => {
@@ -1329,6 +1348,23 @@ describe('ThemeManager', () => {
         expect(localStorage.getItem('weather-theme')).toBe('light');
         tm.setTheme('dark');
         expect(localStorage.getItem('weather-theme')).toBe('dark');
+        tm.setTheme('auto');
+        expect(localStorage.getItem('weather-theme')).toBe('auto');
+    });
+
+    it('getMode returns auto, light, or dark', () => {
+        const tm = new ThemeManager();
+        tm.setTheme('auto');
+        expect(tm.getMode()).toBe('auto');
+        expect(tm.getTheme() === 'light' || tm.getTheme() === 'dark').toBeTruthy();
+    });
+
+    it('auto mode resolves to light during day hours', () => {
+        const tm = new ThemeManager();
+        tm.setTheme('auto');
+        const hour = new Date().getHours();
+        const expected = (hour >= 6 && hour < 20) ? 'light' : 'dark';
+        expect(tm.getTheme()).toBe(expected);
     });
 });
 

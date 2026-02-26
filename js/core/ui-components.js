@@ -10,7 +10,8 @@ class UIComponents {
         const weather = data.weather[0].main.toLowerCase();
         const weatherId = data.weather[0].id;
         const mood = CONFIG.WEATHER_MOODS[weather] || CONFIG.WEATHER_MOODS['clear'];
-        const emoji = WeatherHelpers.getWeatherEmoji(weather, weatherId);
+        const isNight = (Math.floor(Date.now() / 1000) < data.sys.sunrise || Math.floor(Date.now() / 1000) >= data.sys.sunset);
+        const emoji = WeatherHelpers.getWeatherEmoji(weather, weatherId, isNight);
         const czechDescription = WeatherHelpers.translateWeatherToCzech(data.weather[0].description);
 
         const timezoneOffset = data.timezone || 0;

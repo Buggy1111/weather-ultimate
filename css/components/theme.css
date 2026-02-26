@@ -52,9 +52,7 @@
 }
 
 [data-theme="light"] .weather-3d-container {
-    filter: invert(1) hue-rotate(180deg);
-    mix-blend-mode: multiply;
-    opacity: 0.45;
+    display: none;
 }
 
 /* Hero */

@@ -39,7 +39,9 @@ class WeatherUltimate {
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle && this.themeManager) {
             const updateIcon = () => {
-                themeToggle.textContent = this.themeManager.getTheme() === 'dark' ? '☀️' : '🌙';
+                const icons = { auto: '🔄', light: '🌙', dark: '☀️' };
+                themeToggle.textContent = icons[this.themeManager.getMode()] || '🔄';
+                themeToggle.title = `Režim: ${this.themeManager.getMode()} (${this.themeManager.getTheme()})`;
             };
             updateIcon();
             themeToggle.addEventListener('click', () => {
