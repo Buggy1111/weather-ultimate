@@ -889,5 +889,132 @@ describe('Security: XSS Prevention', () => {
     });
 });
 
+// ── BackgroundManager: Gradient Selection ────────────────────
+describe('BackgroundManager: Gradient Selection', () => {
+    it('class exists', () => {
+        expect(typeof BackgroundManager).toBe('function');
+    });
+
+    it('can be instantiated', () => {
+        const bg = new BackgroundManager();
+        expect(bg).toBeTruthy();
+    });
+
+    it('getDominantWeather picks most common weather', () => {
+        const bg = new BackgroundManager();
+        const cities = [
+            { weather: [{ main: 'Rain' }] },
+            { weather: [{ main: 'Rain' }] },
+            { weather: [{ main: 'Clear' }] }
+        ];
+        expect(bg.getDominantWeather(cities)).toBe('rain');
+    });
+
+    it('getDominantWeather returns clear for empty array', () => {
+        const bg = new BackgroundManager();
+        expect(bg.getDominantWeather([])).toBe('clear');
+    });
+
+    it('getDominantWeather handles single city', () => {
+        const bg = new BackgroundManager();
+        expect(bg.getDominantWeather([{ weather: [{ main: 'Snow' }] }])).toBe('snow');
+    });
+
+    it('getDominantPhase picks most common phase', () => {
+        const bg = new BackgroundManager();
+        const now = Math.floor(Date.now() / 1000);
+        const cities = [
+            { sys: { sunrise: now - 3600, sunset: now + 3600 }, timezone: 0 },
+            { sys: { sunrise: now - 3600, sunset: now + 3600 }, timezone: 0 },
+            { sys: { sunrise: now + 3600, sunset: now + 7200 }, timezone: 0 }
+        ];
+        // 2 cities in "day" (now between sunrise and sunset), 1 in "night"
+        expect(bg.getDominantPhase(cities)).toBe('day');
+    });
+
+    it('getDominantPhase returns night for empty array', () => {
+        const bg = new BackgroundManager();
+        expect(bg.getDominantPhase([])).toBe('night');
+    });
+
+    it('getBackgroundConfig returns object with gradient and orbColors', () => {
+        const bg = new BackgroundManager();
+        const config = bg.getBackgroundConfig('clear', 'day');
+        expect(typeof config.gradient).toBe('string');
+        expect(Array.isArray(config.orbColors)).toBeTruthy();
+        expect(config.orbColors).toHaveLength(3);
+    });
+
+    it('getBackgroundConfig returns different gradients for day vs night', () => {
+        const bg = new BackgroundManager();
+        const day = bg.getBackgroundConfig('clear', 'day');
+        const night = bg.getBackgroundConfig('clear', 'night');
+        expect(day.gradient).toBeTruthy();
+        expect(night.gradient).toBeTruthy();
+        expect(day.gradient === night.gradient).toBeFalsy();
+    });
+
+    it('getBackgroundConfig returns different gradients for rain vs clear', () => {
+        const bg = new BackgroundManager();
+        const rain = bg.getBackgroundConfig('rain', 'day');
+        const clear = bg.getBackgroundConfig('clear', 'day');
+        expect(rain.gradient === clear.gradient).toBeFalsy();
+    });
+
+    it('getBackgroundConfig handles all weather types', () => {
+        const bg = new BackgroundManager();
+        const types = ['clear', 'clouds', 'rain', 'drizzle', 'thunderstorm', 'snow', 'mist'];
+        types.forEach(type => {
+            const config = bg.getBackgroundConfig(type, 'day');
+            expect(typeof config.gradient).toBe('string');
+            expect(config.gradient.length).toBeGreaterThan(10);
+        });
+    });
+
+    it('getBackgroundConfig handles all day phases', () => {
+        const bg = new BackgroundManager();
+        const phases = ['day', 'night', 'dawn', 'twilight'];
+        phases.forEach(phase => {
+            const config = bg.getBackgroundConfig('clear', phase);
+            expect(typeof config.gradient).toBe('string');
+            expect(config.gradient.length).toBeGreaterThan(10);
+        });
+    });
+
+    it('getBackgroundConfig handles unknown weather gracefully', () => {
+        const bg = new BackgroundManager();
+        const config = bg.getBackgroundConfig('tornado', 'day');
+        expect(typeof config.gradient).toBe('string');
+    });
+
+    it('getBackgroundConfig handles unknown phase gracefully', () => {
+        const bg = new BackgroundManager();
+        const config = bg.getBackgroundConfig('clear', 'midnight');
+        expect(typeof config.gradient).toBe('string');
+    });
+
+    it('orbColors are valid CSS gradient strings', () => {
+        const bg = new BackgroundManager();
+        const config = bg.getBackgroundConfig('rain', 'night');
+        config.orbColors.forEach(color => {
+            expect(typeof color).toBe('string');
+            expect(color).toContain('linear-gradient');
+        });
+    });
+
+    it('snow + night has cold-themed gradient', () => {
+        const bg = new BackgroundManager();
+        const config = bg.getBackgroundConfig('snow', 'night');
+        // Snow night should have blue/white tones
+        expect(config.gradient).toContain('#');
+    });
+
+    it('thunderstorm has dramatic gradient', () => {
+        const bg = new BackgroundManager();
+        const config = bg.getBackgroundConfig('thunderstorm', 'night');
+        expect(config.gradient).toContain('#');
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();

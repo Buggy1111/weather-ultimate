@@ -39,6 +39,7 @@ body {
         radial-gradient(ellipse at 80% 70%, #16213e 0%, transparent 50%),
         radial-gradient(ellipse at 50% 50%, #0f0f0f 0%, transparent 100%),
         #000000;
+    transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .orb {
@@ -48,6 +49,7 @@ body {
     opacity: 0.5;
     animation: float 20s infinite ease-in-out;
     z-index: -2;
+    transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .orb-1 {

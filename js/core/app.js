@@ -2,7 +2,7 @@
  * Weather Ultimate — main application controller
  *
  * Depends on: StateManager, AdvancedCache, WeatherService, AIPredictions,
- *             ParticleSystem, UIComponents, ForecastManager
+ *             ParticleSystem, UIComponents, ForecastManager, BackgroundManager
  */
 
 class WeatherUltimate {
@@ -12,6 +12,7 @@ class WeatherUltimate {
         this.weatherService = new WeatherService(this.cache);
         this.aiEngine = new AIPredictions();
         this.forecastManager = new ForecastManager(this);
+        this.backgroundManager = typeof BackgroundManager !== 'undefined' ? new BackgroundManager() : null;
         this.updateInterval = null;
         this.initializeApp();
     }
@@ -22,7 +23,10 @@ class WeatherUltimate {
 
         this.setupEventListeners();
         this.state.subscribe('stateChange', () => this.updateUI());
-        this.state.subscribe('statsUpdated', (stats) => this.updateStats(stats));
+        this.state.subscribe('statsUpdated', (stats) => {
+            this.updateStats(stats);
+            this.updateBackground();
+        });
 
         await this.loadDefaultCities();
         this.startRealTimeUpdates();
@@ -374,6 +378,12 @@ class WeatherUltimate {
                 observer.observe(card);
             });
         }, 1000);
+    }
+
+    updateBackground() {
+        if (!this.backgroundManager) return;
+        const cities = Array.from(this.state.state.cities.values());
+        this.backgroundManager.update(cities);
     }
 
     updateUI() {
