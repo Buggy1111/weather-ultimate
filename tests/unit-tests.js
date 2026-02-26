@@ -1235,5 +1235,64 @@ describe('CarouselManager', () => {
     });
 });
 
+// ── Activity Suggestions ─────────────────────────────────────
+describe('WeatherHelpers.getActivitySuggestions', () => {
+    it('function exists', () => {
+        expect(typeof WeatherHelpers.getActivitySuggestions).toBe('function');
+    });
+
+    it('returns array', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Clear', 25, 5);
+        expect(Array.isArray(result)).toBeTruthy();
+    });
+
+    it('returns non-empty for clear weather', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Clear', 22, 3);
+        expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('each suggestion has icon and text', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Clear', 20, 5);
+        result.forEach(s => {
+            expect(typeof s.icon).toBe('string');
+            expect(typeof s.text).toBe('string');
+        });
+    });
+
+    it('suggests indoor activities for rain', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Rain', 15, 10);
+        const hasIndoor = result.some(s => s.text.toLowerCase().includes('muzeum') || s.text.toLowerCase().includes('kavárn') || s.text.toLowerCase().includes('knih'));
+        expect(hasIndoor).toBeTruthy();
+    });
+
+    it('suggests snow activities for snow', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Snow', -2, 3);
+        const hasSnow = result.some(s => s.text.toLowerCase().includes('lyž') || s.text.toLowerCase().includes('sněh') || s.text.toLowerCase().includes('bobov'));
+        expect(hasSnow).toBeTruthy();
+    });
+
+    it('suggests warm weather activities for hot day', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Clear', 32, 2);
+        const hasWarm = result.some(s => s.text.toLowerCase().includes('koupání') || s.text.toLowerCase().includes('zmrzlin') || s.text.toLowerCase().includes('pláž'));
+        expect(hasWarm).toBeTruthy();
+    });
+
+    it('limits to max 3 suggestions', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Clear', 20, 3);
+        expect(result.length).toBeLessThan(5);
+    });
+
+    it('handles thunderstorm', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Thunderstorm', 18, 15);
+        expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('handles strong wind', () => {
+        const result = WeatherHelpers.getActivitySuggestions('Clear', 15, 25);
+        const hasWind = result.some(s => s.text.toLowerCase().includes('drak') || s.text.toLowerCase().includes('vítr'));
+        expect(hasWind).toBeTruthy();
+    });
+});
+
 // ── Run ───────────────────────────────────────────────────────
 renderResults();

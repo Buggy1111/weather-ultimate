@@ -208,6 +208,13 @@ class UIComponents {
                     ${WeatherHelpers.generateSunArc(data.sys.sunrise, data.sys.sunset, timezoneOffset)}
                 </div>
 
+                <div class="activity-suggestions">
+                    ${(() => {
+                        const suggestions = WeatherHelpers.getActivitySuggestions(data.weather[0].main, data.main.temp, data.wind.speed * 3.6);
+                        return suggestions.map(s => `<span class="activity-tag">${s.icon} ${s.text}</span>`).join('');
+                    })()}
+                </div>
+
                 <div class="weather-mood">
                     <p class="weather-mood__label">Nálada počasí</p>
                     <p class="weather-mood__value">${mood.emoji} ${mood.text}</p>

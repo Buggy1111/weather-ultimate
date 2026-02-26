@@ -191,6 +191,64 @@ const WeatherHelpers = {
         return `hsl(${Math.round(hue)}, 80%, 60%)`;
     },
 
+    getActivitySuggestions(weatherMain, temp, windSpeed) {
+        const activities = [];
+
+        if (weatherMain === 'Thunderstorm') {
+            activities.push({ icon: '🏠', text: 'Zůstaňte doma' });
+            activities.push({ icon: '🎮', text: 'Deskovky & hry' });
+            activities.push({ icon: '📚', text: 'Knihovna' });
+            return activities.slice(0, 3);
+        }
+
+        if (weatherMain === 'Snow') {
+            if (temp <= 0) {
+                activities.push({ icon: '⛷️', text: 'Lyžování' });
+                activities.push({ icon: '🛷', text: 'Bobování' });
+                activities.push({ icon: '⛄', text: 'Stavba sněhuláka' });
+            } else {
+                activities.push({ icon: '🚶', text: 'Procházka ve sněhu' });
+                activities.push({ icon: '☕', text: 'Kavárna' });
+            }
+            return activities.slice(0, 3);
+        }
+
+        if (weatherMain === 'Rain' || weatherMain === 'Drizzle') {
+            activities.push({ icon: '🏛️', text: 'Muzeum / galerie' });
+            activities.push({ icon: '☕', text: 'Kavárna s knihou' });
+            activities.push({ icon: '🎬', text: 'Kino' });
+            return activities.slice(0, 3);
+        }
+
+        if (windSpeed >= 20) {
+            activities.push({ icon: '🪁', text: 'Pouštění draků' });
+        }
+
+        if (temp >= 30) {
+            activities.push({ icon: '🏊', text: 'Koupání' });
+            activities.push({ icon: '🍦', text: 'Zmrzlina' });
+            activities.push({ icon: '🏖️', text: 'Pláž / aquapark' });
+        } else if (temp >= 20) {
+            activities.push({ icon: '🚴', text: 'Cyklistika' });
+            activities.push({ icon: '🏃', text: 'Běh venku' });
+            activities.push({ icon: '🧺', text: 'Piknik' });
+        } else if (temp >= 10) {
+            activities.push({ icon: '🚶', text: 'Procházka v parku' });
+            activities.push({ icon: '📸', text: 'Fotografování' });
+            activities.push({ icon: '🏃', text: 'Běh' });
+        } else if (temp >= 0) {
+            activities.push({ icon: '☕', text: 'Kavárna' });
+            activities.push({ icon: '🚶', text: 'Krátká procházka' });
+            activities.push({ icon: '🏛️', text: 'Muzeum' });
+        } else {
+            activities.push({ icon: '🏠', text: 'Zůstaňte v teple' });
+            activities.push({ icon: '☕', text: 'Horký čaj / čokoláda' });
+            activities.push({ icon: '📚', text: 'Knihovna' });
+        }
+
+        return activities.slice(0, 3);
+    },
+
     generateTempBar(dayMin, dayMax, weekMin, weekMax) {
         const range = weekMax - weekMin || 1;
         const leftPct = ((dayMin - weekMin) / range) * 100;
