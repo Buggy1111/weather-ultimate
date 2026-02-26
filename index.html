@@ -34,6 +34,17 @@
     
     <!-- Styles -->
     <link rel="stylesheet" href="./css/main.css">
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
 </head>
 <body>
     <!-- Background Elements -->
@@ -135,7 +146,17 @@
     <!-- Modules -->
     <script src="./js/modules/moon.js"></script>
 
-    <!-- Main Application -->
-    <script src="./js/ultimate.js"></script>
+    <!-- Core Application (load order matters) -->
+    <script src="./js/core/config.js"></script>
+    <script src="./js/core/state.js"></script>
+    <script src="./js/core/cache.js"></script>
+    <script src="./js/core/weather-service.js"></script>
+    <script src="./js/core/ai-predictions.js"></script>
+    <script src="./js/core/ui-helpers.js"></script>
+    <script src="./js/core/ui-components.js"></script>
+    <script src="./js/core/forecast.js"></script>
+    <script src="./js/core/app.js"></script>
+    <script src="./js/core/init.js"></script>
+    <script src="./js/core/debug.js"></script>
 </body>
 </html>

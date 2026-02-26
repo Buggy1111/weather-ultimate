@@ -1,12 +1,15 @@
 {
   "name": "Weather Ultimate",
   "short_name": "Weather",
-  "description": "Next-gen weather app s AI predikcemi",
+  "description": "Next-gen weather app s AI predikcemi a real-time vizualizacemi",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "theme_color": "#667eea",
   "background_color": "#0a0a0a",
+  "categories": ["weather", "utilities"],
+  "lang": "cs",
   "icons": [
     {
       "src": "./assets/favicon/android-chrome-192x192.png",
@@ -17,6 +20,12 @@
       "src": "./assets/favicon/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "./assets/favicon/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
