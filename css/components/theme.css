@@ -42,13 +42,11 @@
 }
 
 [data-theme="light"] .orb {
-    opacity: 0.08 !important;
-    filter: blur(150px);
-    background: linear-gradient(135deg, #93c5fd, #c4b5fd) !important;
+    display: none !important;
 }
 
 [data-theme="light"] #particle-canvas {
-    opacity: 0.08;
+    display: none !important;
 }
 
 [data-theme="light"] .weather-3d-container {
