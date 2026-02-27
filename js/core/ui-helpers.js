@@ -151,34 +151,119 @@ const WeatherHelpers = {
         const setStr = setLocal.toISOString().substring(11, 16);
 
         const dayLen = sunsetUtc - sunriseUtc;
-        const h = Math.floor(dayLen / 3600);
-        const m = Math.floor((dayLen % 3600) / 60);
+        const nightLen = 86400 - dayLen;
+        const dayH = Math.floor(dayLen / 3600);
+        const dayM = Math.floor((dayLen % 3600) / 60);
+        const nightH = Math.floor(nightLen / 3600);
+        const nightM = Math.floor((nightLen % 3600) / 60);
 
-        const W = 240, H = 130;
-        const cx = 120, cy = 95, rx = 95, ry = 65;
-        const arcPath = `M ${cx - rx},${cy} A ${rx},${ry} 0 0,1 ${cx + rx},${cy}`;
-        const arcLen = 271;
+        const W = 320, H = 220;
+        const cx = 160, cy = 108, rx = 115, ry = 62;
+        const sunArcPath = `M ${cx - rx},${cy} A ${rx},${ry} 0 0,1 ${cx + rx},${cy}`;
+        const moonArcPath = `M ${cx + rx},${cy} A ${rx},${ry} 0 0,1 ${cx - rx},${cy}`;
+        const sunFillPath = `${sunArcPath} Z`;
+        const moonFillPath = `${moonArcPath} Z`;
 
-        const cp = Math.max(0, Math.min(1, progress));
-        const angle = Math.PI * (1 - cp);
-        const sunX = (cx + rx * Math.cos(angle)).toFixed(1);
-        const sunY = (cy - ry * Math.sin(angle)).toFixed(1);
         const isDay = progress >= 0 && progress <= 1;
-        const dashLen = Math.round(cp * arcLen);
+
+        // Sun position
+        const cp = Math.max(0, Math.min(1, progress));
+        const sunAngle = Math.PI * (1 - cp);
+        const sunX = (cx + rx * Math.cos(sunAngle)).toFixed(1);
+        const sunY = (cy - ry * Math.sin(sunAngle)).toFixed(1);
+
+        // Moon position (night progress: sunset→sunrise, right→left)
+        let moonProg = 0;
+        if (now > sunsetUtc) {
+            moonProg = (now - sunsetUtc) / nightLen;
+        } else if (now < sunriseUtc) {
+            moonProg = (nightLen - (sunriseUtc - now)) / nightLen;
+        }
+        moonProg = Math.max(0, Math.min(1, moonProg));
+        const moonAngle = Math.PI * moonProg;
+        const moonX = (cx + rx * Math.cos(moonAngle)).toFixed(1);
+        const moonY = (cy + ry * Math.sin(moonAngle)).toFixed(1);
+        const isNight = !isDay;
+
+        // Use pathLength=100 for easy percentage-based dash
+        const sunPct = Math.round(cp * 100);
+        const moonPct = Math.round(moonProg * 100);
 
         let svg = `<svg class="sun-arc" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
-        svg += `<line class="sun-arc__horizon" x1="${cx - rx}" y1="${cy}" x2="${cx + rx}" y2="${cy}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
-        svg += `<path class="sun-arc__path" d="${arcPath}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="4,4"/>`;
+
+        // Gradient definitions
+        svg += `<defs>`;
+        svg += `<linearGradient id="saFillSun" x1="0" y1="0" x2="0" y2="1">`;
+        svg += `<stop offset="0%" stop-color="#fbbf24" stop-opacity="0.18"/>`;
+        svg += `<stop offset="100%" stop-color="#f97316" stop-opacity="0.02"/>`;
+        svg += `</linearGradient>`;
+        svg += `<linearGradient id="saStrokeSun" x1="0" y1="0" x2="1" y2="0">`;
+        svg += `<stop offset="0%" stop-color="#f59e0b"/>`;
+        svg += `<stop offset="50%" stop-color="#fbbf24"/>`;
+        svg += `<stop offset="100%" stop-color="#f97316"/>`;
+        svg += `</linearGradient>`;
+        svg += `<linearGradient id="saFillMoon" x1="0" y1="0" x2="0" y2="1">`;
+        svg += `<stop offset="0%" stop-color="#6366f1" stop-opacity="0.02"/>`;
+        svg += `<stop offset="100%" stop-color="#818cf8" stop-opacity="0.12"/>`;
+        svg += `</linearGradient>`;
+        svg += `<linearGradient id="saStrokeMoon" x1="0" y1="0" x2="1" y2="0">`;
+        svg += `<stop offset="0%" stop-color="#a5b4fc"/>`;
+        svg += `<stop offset="50%" stop-color="#818cf8"/>`;
+        svg += `<stop offset="100%" stop-color="#a5b4fc"/>`;
+        svg += `</linearGradient>`;
+        svg += `<radialGradient id="saGlowSun">`;
+        svg += `<stop offset="0%" stop-color="#fbbf24" stop-opacity="0.5"/>`;
+        svg += `<stop offset="60%" stop-color="#fbbf24" stop-opacity="0.1"/>`;
+        svg += `<stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>`;
+        svg += `</radialGradient>`;
+        svg += `<radialGradient id="saGlowMoon">`;
+        svg += `<stop offset="0%" stop-color="#818cf8" stop-opacity="0.45"/>`;
+        svg += `<stop offset="60%" stop-color="#818cf8" stop-opacity="0.08"/>`;
+        svg += `<stop offset="100%" stop-color="#818cf8" stop-opacity="0"/>`;
+        svg += `</radialGradient>`;
+        svg += `</defs>`;
+
+        // Filled areas (subtle gradient background)
+        svg += `<path d="${sunFillPath}" fill="url(#saFillSun)"/>`;
+        svg += `<path d="${moonFillPath}" fill="url(#saFillMoon)"/>`;
+
+        // Sun arc — dashed outline
+        svg += `<path class="sun-arc__path" d="${sunArcPath}" fill="none" stroke="rgba(251,191,36,0.12)" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+
+        // Sun progress + glow + dot
         if (isDay) {
-            svg += `<path class="sun-arc__progress" d="${arcPath}" fill="none" stroke="rgba(251,191,36,0.6)" stroke-width="2.5" stroke-dasharray="${dashLen},${arcLen}"/>`;
-            svg += `<circle class="sun-arc__glow" cx="${sunX}" cy="${sunY}" r="10" fill="rgba(251,191,36,0.15)"/>`;
-            svg += `<circle class="sun-arc__dot" cx="${sunX}" cy="${sunY}" r="5" fill="#fbbf24"/>`;
+            svg += `<path class="sun-arc__progress" d="${sunArcPath}" fill="none" stroke="url(#saStrokeSun)" stroke-width="2.5" pathLength="100" stroke-dasharray="${sunPct},100" stroke-linecap="round"/>`;
+            svg += `<circle cx="${sunX}" cy="${sunY}" r="18" fill="url(#saGlowSun)"/>`;
+            svg += `<circle class="sun-arc__dot" cx="${sunX}" cy="${sunY}" r="6" fill="#fbbf24" stroke="rgba(251,191,36,0.3)" stroke-width="2"/>`;
         }
-        svg += `<text class="sun-arc__time sun-arc__time--rise" x="${cx - rx}" y="${cy + 18}" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">${riseStr}</text>`;
-        svg += `<text class="sun-arc__time sun-arc__time--set" x="${cx + rx}" y="${cy + 18}" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">${setStr}</text>`;
-        svg += `<text class="sun-arc__label" x="${cx}" y="${cy + 18}" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10">${h}h ${m}m</text>`;
-        svg += `<text class="sun-arc__icon" x="${cx - rx - 1}" y="${cy - 5}" text-anchor="middle" font-size="13">🌅</text>`;
-        svg += `<text class="sun-arc__icon" x="${cx + rx + 1}" y="${cy - 5}" text-anchor="middle" font-size="13">🌇</text>`;
+
+        // Horizon line
+        svg += `<line class="sun-arc__horizon" x1="${cx - rx - 12}" y1="${cy}" x2="${cx + rx + 12}" y2="${cy}" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="3,3"/>`;
+
+        // Moon arc — dashed outline
+        svg += `<path class="moon-arc__path" d="${moonArcPath}" fill="none" stroke="rgba(129,140,248,0.1)" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+
+        // Moon progress + glow + dot
+        if (isNight) {
+            svg += `<path class="moon-arc__progress" d="${moonArcPath}" fill="none" stroke="url(#saStrokeMoon)" stroke-width="2.5" pathLength="100" stroke-dasharray="${moonPct},100" stroke-linecap="round"/>`;
+            svg += `<circle cx="${moonX}" cy="${moonY}" r="16" fill="url(#saGlowMoon)"/>`;
+            svg += `<circle class="moon-arc__dot" cx="${moonX}" cy="${moonY}" r="5" fill="#818cf8" stroke="rgba(129,140,248,0.3)" stroke-width="2"/>`;
+        }
+
+        // Sunrise label (left)
+        svg += `<text class="sun-arc__icon" x="${cx - rx - 12}" y="${cy - 8}" text-anchor="middle" font-size="15">🌅</text>`;
+        svg += `<text class="sun-arc__time sun-arc__time--rise" x="${cx - rx - 12}" y="${cy + 16}" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="12" font-weight="500">${riseStr}</text>`;
+
+        // Sunset label (right)
+        svg += `<text class="sun-arc__icon" x="${cx + rx + 12}" y="${cy - 8}" text-anchor="middle" font-size="15">🌇</text>`;
+        svg += `<text class="sun-arc__time sun-arc__time--set" x="${cx + rx + 12}" y="${cy + 16}" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="12" font-weight="500">${setStr}</text>`;
+
+        // Day duration (top center)
+        svg += `<text class="sun-arc__label sun-arc__label--day" x="${cx}" y="20" text-anchor="middle" fill="rgba(251,191,36,0.55)" font-size="12" font-weight="600">☀️ Den: ${dayH}h ${dayM}m</text>`;
+
+        // Night duration (bottom center)
+        svg += `<text class="moon-arc__label" x="${cx}" y="${H - 6}" text-anchor="middle" fill="rgba(129,140,248,0.45)" font-size="12" font-weight="600">🌙 Noc: ${nightH}h ${nightM}m</text>`;
+
         svg += `</svg>`;
 
         return svg;
@@ -353,11 +438,11 @@ const WeatherHelpers = {
         const maxTemp = Math.max(...temps);
         const range = maxTemp - minTemp || 1;
 
-        const svgW = 300;
-        const svgH = 100;
-        const padX = 30;
-        const padTop = 20;
-        const padBot = 25;
+        const svgW = 500;
+        const svgH = 120;
+        const padX = 35;
+        const padTop = 25;
+        const padBot = 28;
         const plotW = svgW - padX * 2;
         const plotH = svgH - padTop - padBot;
 
@@ -372,17 +457,17 @@ const WeatherHelpers = {
         const gradientArea = `${points[0].x.toFixed(1)},${padTop + plotH} ${polyline} ${points[points.length-1].x.toFixed(1)},${padTop + plotH}`;
 
         const dots = points.map(p =>
-            `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${this.getTempColor(p.temp)}" />`
+            `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="${this.getTempColor(p.temp)}" />`
         ).join('');
 
-        const tempLabels = points.filter((_, i) => i === 0 || i === points.length - 1 || i % 2 === 0).map(p =>
+        const tempLabels = points.map(p =>
             `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1) - 8}" class="temp-trend__label">${p.temp}°</text>`
         ).join('');
 
-        const timeLabels = points.filter((_, i) => i % 2 === 0 || i === points.length - 1).map(p => {
+        const timeLabels = points.map(p => {
             const time = new Date((p.item.dt + timezoneOffset) * 1000);
             const timeStr = time.toISOString().substring(11, 16);
-            return `<text x="${p.x.toFixed(1)}" y="${padTop + plotH + 16}" class="temp-trend__time">${timeStr}</text>`;
+            return `<text x="${p.x.toFixed(1)}" y="${padTop + plotH + 18}" class="temp-trend__time">${timeStr}</text>`;
         }).join('');
 
         return `<div class="temp-trend-container">` +

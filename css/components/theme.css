@@ -313,19 +313,24 @@
 }
 
 [data-theme="light"] .sun-arc-container::before {
-    background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.3), rgba(249, 115, 22, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.25), rgba(249, 115, 22, 0.25), transparent);
 }
 
 [data-theme="light"] .sun-arc__horizon {
-    stroke: rgba(0, 0, 0, 0.12) !important;
+    stroke: rgba(0, 0, 0, 0.1) !important;
 }
 
 [data-theme="light"] .sun-arc__path {
-    stroke: rgba(0, 0, 0, 0.15) !important;
+    stroke: rgba(217, 119, 6, 0.18) !important;
 }
 
 [data-theme="light"] .sun-arc__progress {
-    stroke: rgba(217, 119, 6, 0.7) !important;
+    stroke: url(#saStrokeSun) !important;
+}
+
+[data-theme="light"] .sun-arc__dot {
+    fill: #f59e0b !important;
+    stroke: rgba(245, 158, 11, 0.35) !important;
 }
 
 [data-theme="light"] .sun-arc__time {
@@ -333,7 +338,25 @@
 }
 
 [data-theme="light"] .sun-arc__label {
-    fill: #64748b !important;
+    fill: #b45309 !important;
+}
+
+/* Moon Arc */
+[data-theme="light"] .moon-arc__path {
+    stroke: rgba(99, 102, 241, 0.15) !important;
+}
+
+[data-theme="light"] .moon-arc__progress {
+    stroke: url(#saStrokeMoon) !important;
+}
+
+[data-theme="light"] .moon-arc__dot {
+    fill: #6366f1 !important;
+    stroke: rgba(99, 102, 241, 0.3) !important;
+}
+
+[data-theme="light"] .moon-arc__label {
+    fill: #4f46e5 !important;
 }
 
 /* Precipitation Timeline */

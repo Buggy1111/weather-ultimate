@@ -22,9 +22,9 @@ function detectPerformanceTier() {
 const PERF_TIER = detectPerformanceTier();
 
 const PARTICLE_COUNTS = {
-    high:   { rain: 3000, snow: 4000, drizzle: 1500, sunDust: 200, stars: 300 },
-    medium: { rain: 1500, snow: 2000, drizzle: 800,  sunDust: 100, stars: 150 },
-    low:    { rain: 500,  snow: 600,  drizzle: 300,  sunDust: 50,  stars: 60  }
+    high:   { rain: 800, snow: 1000, drizzle: 400, sunDust: 80, stars: 120 },
+    medium: { rain: 400, snow: 500,  drizzle: 200, sunDust: 40, stars: 60  },
+    low:    { rain: 150, snow: 200,  drizzle: 80,  sunDust: 20, stars: 30  }
 };
 
 const COUNTS = PARTICLE_COUNTS[PERF_TIER];
@@ -146,9 +146,11 @@ class Weather3DEffects {
         this.cameras = new Map();
         this.animations = new Map();
         this.effectData = new Map();
+        this.visibleCards = new Set();
         this.rafId = null;
         this.initialized = false;
         this.globalTime = 0;
+        this._resizeTimer = null;
 
         if (typeof THREE === 'undefined') {
             console.error('Three.js not found! 3D effects disabled.');
@@ -161,21 +163,45 @@ class Weather3DEffects {
         this.initialized = true;
         this.connectToWeatherApp();
         this.startAnimationLoop();
-        window.addEventListener('resize', () => this.handleResize());
+        this._setupVisibilityObserver();
+        window.addEventListener('resize', () => {
+            clearTimeout(this._resizeTimer);
+            this._resizeTimer = setTimeout(() => this.handleResize(), 200);
+        });
         console.log(`🎮 Weather 3D v2.0 [${PERF_TIER}] initialized`);
+    }
+
+    _setupVisibilityObserver() {
+        this._observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const cardId = entry.target.dataset?.cardId;
+                if (!cardId) return;
+                if (entry.isIntersecting) {
+                    this.visibleCards.add(cardId);
+                } else {
+                    this.visibleCards.delete(cardId);
+                }
+            });
+        }, { rootMargin: '50px' });
+    }
+
+    _observeCard(card) {
+        if (this._observer && card) {
+            this._observer.observe(card);
+        }
     }
 
     connectToWeatherApp() {
         let retries = 0;
         const check = setInterval(() => {
             if (window.weatherCardEffects) {
-                const orig = window.weatherCardEffects.createCardEffect.bind(window.weatherCardEffects);
+                // Disable 2D particle effects — 3D replaces them entirely
+                window.weatherCardEffects.cleanup();
                 window.weatherCardEffects.createCardEffect = (card, weatherType) => {
-                    orig(card, weatherType);
                     this.create3DEffect(card, weatherType);
                 };
                 clearInterval(check);
-                console.log('🔗 3D v2.0 connected');
+                console.log('🔗 3D v2.0 connected (2D effects disabled)');
                 setTimeout(() => {
                     document.querySelectorAll('.weather-card').forEach(card => {
                         const w = card.dataset.weather;
@@ -210,7 +236,7 @@ class Weather3DEffects {
 
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: PERF_TIER !== 'low' });
         renderer.setSize(w, h);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, PERF_TIER === 'low' ? 1 : 2));
         renderer.setClearColor(0x000000, 0);
         container.appendChild(renderer.domElement);
 
@@ -218,6 +244,8 @@ class Weather3DEffects {
         this.scenes.set(cardId, scene);
         this.cameras.set(cardId, camera);
         this.renderers.set(cardId, renderer);
+        this.visibleCards.add(cardId); // assume visible on creation
+        this._observeCard(card);
 
         // Ambient light for all scenes
         scene.add(new THREE.AmbientLight(0xffffff, 0.4));
@@ -1267,13 +1295,27 @@ class Weather3DEffects {
 
     startAnimationLoop() {
         let lastTime = 0;
+        // Frame rate cap: low=30fps, medium=45fps, high=60fps
+        const targetFPS = PERF_TIER === 'low' ? 30 : PERF_TIER === 'medium' ? 45 : 60;
+        const frameInterval = 1000 / targetFPS;
+        let timeSinceLastFrame = 0;
+
         const animate = (currentTime) => {
             this.rafId = requestAnimationFrame(animate);
-            const delta = Math.min((currentTime - lastTime) / 1000, 0.1); // cap delta
+            const elapsed = currentTime - lastTime;
             lastTime = currentTime;
+
+            // Throttle rendering to target FPS
+            timeSinceLastFrame += elapsed;
+            if (timeSinceLastFrame < frameInterval) return;
+            const delta = Math.min(timeSinceLastFrame / 1000, 0.1);
+            timeSinceLastFrame = 0;
             this.globalTime += delta;
 
             this.scenes.forEach((scene, cardId) => {
+                // Skip off-screen cards
+                if (!this.visibleCards.has(cardId)) return;
+
                 const camera = this.cameras.get(cardId);
                 const renderer = this.renderers.get(cardId);
                 const anim = this.animations.get(cardId);

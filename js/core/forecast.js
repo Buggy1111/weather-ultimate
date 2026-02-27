@@ -319,13 +319,15 @@ class ForecastManager {
 
         ctx.clearRect(0, 0, width, height);
 
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
         const allTemps = dailyForecasts.flatMap(d => [d.minTemp, d.maxTemp]);
         const minTemp = Math.min(...allTemps) - 2;
         const maxTemp = Math.max(...allTemps) + 2;
         const tempRange = Math.max(maxTemp - minTemp, 1);
 
         // Grid
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeStyle = isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
         ctx.lineWidth = 1;
         for (let i = 0; i <= 5; i++) {
             const y = padding + (i * (height - 2 * padding) / 5);
@@ -335,7 +337,7 @@ class ForecastManager {
             ctx.stroke();
 
             const temp = Math.round(maxTemp - (i * tempRange / 5));
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)';
             ctx.font = '12px system-ui';
             ctx.textAlign = 'right';
             ctx.fillText(`${temp}°`, padding - 10, y + 4);
@@ -362,7 +364,7 @@ class ForecastManager {
             ctx.beginPath();
             ctx.arc(x, y, 5, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = isLight ? '#1e293b' : 'white';
             ctx.font = 'bold 12px system-ui';
             ctx.textAlign = 'center';
             ctx.fillText(`${day.maxTemp}°`, x, y - 10);
@@ -387,14 +389,14 @@ class ForecastManager {
             ctx.beginPath();
             ctx.arc(x, y, 5, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = isLight ? '#1e293b' : 'white';
             ctx.font = 'bold 12px system-ui';
             ctx.textAlign = 'center';
             ctx.fillText(`${day.minTemp}°`, x, y + 20);
         });
 
         // Day labels
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.8)';
         ctx.font = '14px system-ui';
         dailyForecasts.forEach((day, i) => {
             const x = padding + i * dayWidth;
@@ -407,9 +409,11 @@ class ForecastManager {
         ctx.font = '12px system-ui';
         ctx.fillStyle = '#ff6b6b';
         ctx.fillRect(width - 150, 10, 20, 3);
+        ctx.fillStyle = isLight ? '#dc2626' : '#ff6b6b';
         ctx.fillText('Max teplota', width - 120, 15);
         ctx.fillStyle = '#4ecdc4';
         ctx.fillRect(width - 150, 25, 20, 3);
+        ctx.fillStyle = isLight ? '#0d9488' : '#4ecdc4';
         ctx.fillText('Min teplota', width - 120, 30);
     }
 
